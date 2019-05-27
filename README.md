@@ -32,7 +32,9 @@ Datasets:
   python word2vec.py --max=[MAX_VOCAB] --local
   ```
 
-- [dict2vec pretrained embedding](https://s3.us-east-2.amazonaws.com/dict2vec-data/dict2vec100.tar.bz2), put it 
+- [dict2vec pretrained
+embedding](https://s3.us-east-2.amazonaws.com/dict2vec-data/dict2vec100.tar.bz2), 
+extract then put it under ```(project_folder)/embeddings/word_embedding/```
   
 - [polyglot english embedding](https://polyglot.readthedocs.io/en/latest/Download.html#langauge-task-support), under
   ```(project_folder)/embeddings/word_embedding/```
