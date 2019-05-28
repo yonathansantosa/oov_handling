@@ -133,7 +133,7 @@ if run != 1:
 
 #* Folder naming
 cloud_dir = '/content/gdrive/My Drive/'
-saved_model_path = f'train_dropout_test/trained_model_{args.lang}_{args.model}_{args.embedding}_{args.seed}'
+saved_model_path = f'train_dropout/trained_model_{args.lang}_{args.model}_{args.embedding}_{args.seed}'
 logger_dir = f'{saved_model_path}/logs/run{args.run}/'
 logger_val_dir = f'{saved_model_path}/logs/val-{args.run}/'
 
