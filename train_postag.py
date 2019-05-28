@@ -63,6 +63,7 @@ parser.add_argument('--classif', default=200)
 parser.add_argument('--neighbor', default=5)
 parser.add_argument('--seq_len', default=5)
 parser.add_argument('--seed', default=64)
+parser.add_argument('--trained_seed', default=64)
 parser.add_argument('--tagset', default='brown')
 parser.add_argument('--continue_model', default=False, action='store_true')
 
@@ -74,7 +75,7 @@ args = parser.parse_args()
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 cloud_dir = '/content/gdrive/My Drive/train_dropout/'
-saved_model_path = 'trained_model_%s_%s_%s' % (args.lang, args.model, args.embedding)
+saved_model_path = 'trained_model_%s_%s_%s_%s' % (args.lang, args.model, args.embedding, args.trained_seed)
 saved_postag_path = 'trained_model_%s_%s_%s_postag' % (args.lang, args.model, args.embedding)
 logger_dir = '%s/logs/run%s/' % (saved_postag_path, args.run)
 logger_val_dir = '%s/logs/val-run%s/' % (saved_postag_path, args.run)
