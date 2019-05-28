@@ -124,6 +124,7 @@ parser.add_argument('--seed', default=64)
 args = parser.parse_args()
 
 #* Create a failsafe in case of wrong numbering
+run = int(args.run)
 if run < 1:
     args.run = '1'
 
@@ -147,7 +148,6 @@ logger_val = Logger(logger_val_dir)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # *Parameters
-run = int(args.run)
 char_emb_dim = int(args.charembdim)
 char_max_len = int(args.charlen)
 random_seed = int(args.seed)
