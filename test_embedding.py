@@ -153,14 +153,14 @@ model.eval()
 if args.words == None:
     words = 'MCT McNeally Vercellotti Secretive corssing flatfish compartmentalize pesky lawnmower developiong hurtling expectedly'.split()
 else:
-    words = args.words
+    words = 'MCT McNeally Vercellotti Secretive corssing flatfish compartmentalize pesky lawnmower developiong hurtling expectedly'.split() + args.words
 
 idxs = char_embed.char_split(words).to(device)
 if args.model != 'lstm': idxs = idxs.unsqueeze(1)
 inputs = Variable(idxs) # (length x batch x char_emb_dim)
 output = model.forward(inputs) # (batch x word_emb_dim)
 
-cos_dist, nearest_neighbor = cosine_similarity(output, dataset.word_embedding.weight.to(device), neighbor)
+cos_dist, nearest_neighbor = cosine_similarity(output.to(device), dataset.word_embedding.weight.to(device), neighbor)
 
 for i, word in enumerate(words):
-    print(f'{loss_dist.item():.4f} | {words} \t=> {dataset.idxs2sentence(nearest_neighbor[0])}')
+    print(f'{cos_dist[i].item():.4f} | {word} \t=> {dataset.idxs2sentence(nearest_neighbor[i])}')
