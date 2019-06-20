@@ -160,7 +160,7 @@ if args.model != 'lstm': idxs = idxs.unsqueeze(1)
 inputs = Variable(idxs) # (length x batch x char_emb_dim)
 output = model.forward(inputs) # (batch x word_emb_dim)
 
-cos_dist, nearest_neighbor = cosine_similarity(output, dataset.word_embedding.weight, neighbor)
+cos_dist, nearest_neighbor = cosine_similarity(output, dataset.word_embedding.weight.to(device), neighbor)
 
 for i, word in enumerate(words):
     print(f'{loss_dist.item():.4f} | {words} \t=> {dataset.idxs2sentence(nearest_neighbor[0])}')
