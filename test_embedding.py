@@ -86,7 +86,7 @@ logger_val_dir = f'{saved_model_path}/logs/val-{args.run}/'
 
 classif = int(args.classif)
 multiplier = int(args.multiplier)
-args.local = True
+
 if not args.local: saved_model_path = cloud_dir + saved_model_path
 
 if args.loss_fn == 'cosine':
