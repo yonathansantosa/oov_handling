@@ -73,7 +73,7 @@ parser.add_argument('--momentum', default=0)
 parser.add_argument('--multiplier', default=1)
 parser.add_argument('--classif', default=200)
 parser.add_argument('--neighbor', default=5)
-parser.add_argument('--seed', default=64)
+parser.add_argument('--seed', default=128)
 parser.add_argument('--words', nargs='+')
 
 
@@ -86,7 +86,7 @@ logger_val_dir = f'{saved_model_path}/logs/val-{args.run}/'
 
 classif = int(args.classif)
 multiplier = int(args.multiplier)
-
+args.local = True
 if not args.local: saved_model_path = cloud_dir + saved_model_path
 
 if args.loss_fn == 'cosine':
@@ -163,4 +163,4 @@ output = model.forward(inputs) # (batch x word_emb_dim)
 cos_dist, nearest_neighbor = cosine_similarity(output.to(device), dataset.word_embedding.weight.to(device), neighbor)
 
 for i, word in enumerate(words):
-    print(f'{cos_dist[i].item():.4f} | {word} \t=> {dataset.idxs2sentence(nearest_neighbor[i])}')
+    print(f'{cos_dist[i][0].item():.4f} | {word} \t=> {dataset.idxs2sentence(nearest_neighbor[i])}')
