@@ -56,6 +56,10 @@ def init_weights(m):
         m.weight.data.fill_(0.01)
         m.bias.data.fill_(0.01)
 
+def sort_idxs(idxs, argsort):
+    new_idxs = [idxs[i] for i in argsort]
+    return new_idxs
+
 def pairwise_distances(x, y=None, multiplier=1., loss=False, neighbor=5):
     '''
     Input: 
@@ -247,9 +251,17 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     for it, (X, y) in enumerate(train_loader):
         model.zero_grad()
         words = dataset.idxs2words(X)
-        idxs = char_embed.char_split(words).to(device)
-        if args.model != 'lstm': idxs = idxs.unsqueeze(1)
-        inputs = Variable(idxs) # (length x batch x char_emb_dim)
+        idxs = char_embed.char_split(words)
+        if args.model == 'lstm':
+            idxs_len = torch.LongTensor([len(data) for data in idxs])
+            idxs_sorted, idxs_argsort = idxs_len.sort(descending=True)
+            idxs = sort_idxs(idxs, idxs_argsort)      
+            idxs_len_sorted = sort_idxs(idxs_len, idxs_argsort)
+            inputs = (idxs, idxs_len_sorted) # (batch x seq_len)
+        else: 
+            idxs = nn.utils.rnn.pad_sequence(idxs, batch_first=True)
+            idxs = idxs.unsqueeze(1)
+            inputs = Variable(idxs).to(device) # (batch x channel x seq_len)
         target = Variable(y*multiplier).to(device) # (batch x word_emb_dim)
         output = model.forward(inputs) # (batch x word_emb_dim)
         loss = criterion(output, target) if args.loss_fn == 'mse' else (1-criterion(output, target)).mean()
@@ -302,9 +314,17 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     mse_loss = 0.
     for it, (X, target) in enumerate(validation_loader):
         words = dataset.idxs2words(X)
-        idxs = char_embed.char_split(words).to(device)
-        if args.model != 'lstm': idxs = idxs.unsqueeze(1)
-        inputs = Variable(idxs) # (length x batch x char_emb_dim)
+        idxs = char_embed.char_split(words)
+        if args.model == 'lstm':
+            idxs_len = torch.LongTensor([len(data) for data in idxs])
+            idxs_sorted, idxs_argsort = idxs_len.sort(descending=True)
+            idxs = sort_idxs(idxs, idxs_argsort)      
+            idxs_len_sorted = sort_idxs(idxs_len, idxs_argsort)
+            inputs = (idxs, idxs_len_sorted) # (batch x seq_len)
+        else: 
+            idxs = nn.utils.rnn.pad_sequence(idxs, batch_first=True)
+            idxs = idxs.unsqueeze(1)
+            inputs = Variable(idxs).to(device) # (batch x channel x seq_len)
         target = target.to(device) # (batch x word_emb_dim)
         output = model.forward(inputs) # (batch x word_emb_dim)
         mse_loss += ((output-target)**2 / ((dataset_size-split)*emb_dim)).sum().item()
@@ -350,9 +370,17 @@ for it, (X, y) in enumerate(train_loader):
 mse_loss = 0.
 for it, (X, target) in enumerate(validation_loader):
     words = dataset.idxs2words(X)
-    idxs = char_embed.char_split(words).to(device)
-    if args.model != 'lstm': idxs = idxs.unsqueeze(1)
-    inputs = Variable(idxs) # (length x batch x char_emb_dim)
+    idxs = char_embed.char_split(words)
+    if args.model == 'lstm':
+        idxs_len = torch.LongTensor([len(data) for data in idxs])
+        idxs_sorted, idxs_argsort = idxs_len.sort(descending=True)
+        idxs = sort_idxs(idxs, idxs_argsort)      
+        idxs_len_sorted = sort_idxs(idxs_len, idxs_argsort)
+        inputs = (idxs, idxs_len_sorted) # (batch x seq_len)
+    else: 
+        idxs = nn.utils.rnn.pad_sequence(idxs, batch_first=True)
+        idxs = idxs.unsqueeze(1)
+        inputs = Variable(idxs).to(device) # (batch x channel x seq_len)
     target = target.to(device) # (batch x word_emb_dim)
 
     model.zero_grad()

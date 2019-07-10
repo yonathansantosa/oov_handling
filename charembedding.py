@@ -63,27 +63,34 @@ class Char_embedding:
         # split_sentence = sentence.split()
         # split_sentence = sentence.split()
 
+        # for word in sentence:
+        #     if word == '<pad>':
+        #         char_data += [[self.char2idx['<pad>']] * self.char_max_len]
+        #     else:
+        #         c = list(word)
+        #         c = ['<sow>'] + c
+        #         if len(c) > self.char_max_len:
+        #             # c_idx = [self.char2idx['#'] if x in numbers else self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c[:self.char_max_len]]
+        #             c_idx = [self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c[:self.char_max_len]]
+        #         elif len(c) <= self.char_max_len:
+        #             # c_idx = [self.char2idx['#'] if x in numbers else self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c]
+        #             c_idx = [self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c]                
+        #             if len(c_idx) < self.char_max_len: c_idx.append(self.char2idx['<eow>'])
+        #             for i in range(self.char_max_len-len(c)-1):
+        #                 c_idx.append(self.char2idx['<pad>'])
+        #         char_data += [c_idx]
+
+        # char_data = torch.Tensor(char_data).long()
+        # char_data = F.dropout(char_data, dropout)
+        # return char_data
+
         for word in sentence:
-            if word == '<pad>':
-                char_data += [[self.char2idx['<pad>']] * self.char_max_len]
-            else:
-                c = list(word)
-                c = ['<sow>'] + c
-                if len(c) > self.char_max_len:
-                    # c_idx = [self.char2idx['#'] if x in numbers else self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c[:self.char_max_len]]
-                    c_idx = [self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c[:self.char_max_len]]
-                elif len(c) <= self.char_max_len:
-                    # c_idx = [self.char2idx['#'] if x in numbers else self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c]
-                    c_idx = [self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c]                
-                    if len(c_idx) < self.char_max_len: c_idx.append(self.char2idx['<eow>'])
-                    for i in range(self.char_max_len-len(c)-1):
-                        c_idx.append(self.char2idx['<pad>'])
-                char_data += [c_idx]
-
-        char_data = torch.Tensor(char_data).long()
-        char_data = F.dropout(char_data, dropout)
+            c = list(word)
+            c = ['<sow>'] + c
+            c_idx = torch.LongTensor([self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c[:self.char_max_len]])
+            char_data += [c_idx]
+        
         return char_data
-
     def char_sents_split(self, sentences, dropout=0.):
         '''
         Splitting character of a sentences then converting it
