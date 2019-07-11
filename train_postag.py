@@ -277,7 +277,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
             # idxs = char_embed.char_split(words)
             if args.model == 'lstm':
                 # idxs_stacked = torch.stack(idxs)
-                # idxs_len = torch.LongTensor([len(data) for data in idxs])
+                idxs_len = torch.LongTensor([len(data) for data in idxs])
                 # idxs_sorted, idxs_argsort = idxs_len.sort(descending=True)
                 # idxs = sort_idxs(idxs, idxs_argsort)      
                 # idxs_len_sorted = sort_idxs(idxs_len, idxs_argsort)
@@ -285,7 +285,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
                 # generated_embeddings = model.forward(inputs)
                 # _, argargsort = idxs_argsort.sort()
                 # generated_embeddings = torch.stack(sort_idxs(generated_embeddings, argargsort)).view(X.size(0),-1,emb_dim)
-                generated_embeddings = model.forward(idxs).view(X.size(0),-1,emb_dim)
+                generated_embeddings = model.forward((idxs, idxs_len)).view(X.size(0),-1,emb_dim)
             else: 
                 idxs = nn.utils.rnn.pad_sequence(idxs, batch_first=True)
                 idxs = idxs.unsqueeze(1)
@@ -336,7 +336,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
             idxs = char_embed.char_sents_split(words)
             if args.model == 'lstm':
                 # idxs_stacked = torch.stack(idxs)
-                # idxs_len = torch.LongTensor([len(data) for data in idxs])
+                idxs_len = torch.LongTensor([len(data) for data in idxs])
                 # idxs_sorted, idxs_argsort = idxs_len.sort(descending=True)
                 # idxs = sort_idxs(idxs, idxs_argsort)      
                 # idxs_len_sorted = sort_idxs(idxs_len, idxs_argsort)
@@ -344,7 +344,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
                 # generated_embeddings = model.forward(inputs)
                 # _, argargsort = idxs_argsort.sort()
                 # generated_embeddings = torch.stack(sort_idxs(generated_embeddings, argargsort)).view(X.size(0),-1,emb_dim)
-                generated_embeddings = model.forward(idxs).view(X.size(0),-1,emb_dim)
+                generated_embeddings = model.forward((idxs, idxs_len)).view(X.size(0),-1,emb_dim)
             else: 
                 idxs = nn.utils.rnn.pad_sequence(idxs, batch_first=True)
                 idxs = idxs.unsqueeze(1)
@@ -400,7 +400,7 @@ for it, (X, y) in enumerate(validation_loader):
         idxs = char_embed.char_sents_split(words)
         if args.model == 'lstm':
             # idxs_stacked = torch.stack(idxs)
-            # idxs_len = torch.LongTensor([len(data) for data in idxs])
+            idxs_len = torch.LongTensor([len(data) for data in idxs])
             # idxs_sorted, idxs_argsort = idxs_len.sort(descending=True)
             # idxs = sort_idxs(idxs, idxs_argsort)      
             # idxs_len_sorted = sort_idxs(idxs_len, idxs_argsort)
@@ -408,7 +408,7 @@ for it, (X, y) in enumerate(validation_loader):
             # generated_embeddings = model.forward(inputs)
             # _, argargsort = idxs_argsort.sort()
             # generated_embeddings = torch.stack(sort_idxs(generated_embeddings, argargsort)).view(X.size(0),-1,emb_dim)
-            generated_embeddings = model.forward(idxs).view(X.size(0),-1,emb_dim)
+            generated_embeddings = model.forward((idxs, idxs_len)).view(X.size(0),-1,emb_dim)
         else: 
             idxs = nn.utils.rnn.pad_sequence(idxs, batch_first=True)
             idxs = idxs.unsqueeze(1)

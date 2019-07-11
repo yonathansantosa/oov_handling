@@ -253,12 +253,12 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
         words = dataset.idxs2words(X)
         idxs = char_embed.char_split(words)
         if args.model == 'lstm':
-            # idxs_len = torch.LongTensor([len(data) for data in idxs])
+            idxs_len = torch.LongTensor([len(data) for data in idxs])
             # idxs_sorted, idxs_argsort = idxs_len.sort(descending=True)
             # idxs = sort_idxs(idxs, idxs_argsort)      
             # idxs_len_sorted = sort_idxs(idxs_len, idxs_argsort)
             # inputs = (idxs, idxs_len_sorted) # (batch x seq_len)
-            inputs = idxs
+            inputs = (idxs, idxs_len)
         else: 
             idxs = nn.utils.rnn.pad_sequence(idxs, batch_first=True)
             idxs = idxs.unsqueeze(1)
@@ -317,12 +317,12 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
         words = dataset.idxs2words(X)
         idxs = char_embed.char_split(words)
         if args.model == 'lstm':
-            # idxs_len = torch.LongTensor([len(data) for data in idxs])
+            idxs_len = torch.LongTensor([len(data) for data in idxs])
             # idxs_sorted, idxs_argsort = idxs_len.sort(descending=True)
             # idxs = sort_idxs(idxs, idxs_argsort)      
             # idxs_len_sorted = sort_idxs(idxs_len, idxs_argsort)
             # inputs = (idxs, idxs_len_sorted) # (batch x seq_len)
-            inputs = idxs
+            inputs = (idxs, idxs_len)
         else: 
             idxs = nn.utils.rnn.pad_sequence(idxs, batch_first=True)
             idxs = idxs.unsqueeze(1)
@@ -363,12 +363,12 @@ for it, (X, y) in enumerate(train_loader):
     words = dataset.idxs2words(X)
     idxs = char_embed.char_split(words)
     if args.model == 'lstm':
-        # idxs_len = torch.LongTensor([len(data) for data in idxs])
+        idxs_len = torch.LongTensor([len(data) for data in idxs])
         # idxs_sorted, idxs_argsort = idxs_len.sort(descending=True)
         # idxs = sort_idxs(idxs, idxs_argsort)      
         # idxs_len_sorted = sort_idxs(idxs_len, idxs_argsort)
         # inputs = (idxs, idxs_len_sorted) # (batch x seq_len)
-        inputs = idxs
+        inputs = (idxs, idxs_len)
     else: 
         idxs = nn.utils.rnn.pad_sequence(idxs, batch_first=True)
         idxs = idxs.unsqueeze(1)
@@ -386,12 +386,12 @@ for it, (X, target) in enumerate(validation_loader):
     words = dataset.idxs2words(X)
     idxs = char_embed.char_split(words)
     if args.model == 'lstm':
-        # idxs_len = torch.LongTensor([len(data) for data in idxs])
+        idxs_len = torch.LongTensor([len(data) for data in idxs])
         # idxs_sorted, idxs_argsort = idxs_len.sort(descending=True)
         # idxs = sort_idxs(idxs, idxs_argsort)      
         # idxs_len_sorted = sort_idxs(idxs_len, idxs_argsort)
         # inputs = (idxs, idxs_len_sorted) # (batch x seq_len)
-        inputs = idxs
+        inputs = (idxs, idxs_len)
     else: 
         idxs = nn.utils.rnn.pad_sequence(idxs, batch_first=True)
         idxs = idxs.unsqueeze(1)
