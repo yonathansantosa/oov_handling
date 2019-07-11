@@ -28,6 +28,10 @@ def init_weights(m):
         m.weight.data.fill_(0.01)
         m.bias.data.fill_(0.01)
 
+def sort_idxs(idxs, argsort):
+    new_idxs = [idxs[i] for i in argsort]
+    return new_idxs
+
 # *Argument parser
 parser = argparse.ArgumentParser(
     description='Conditional Text Generation: Train Discriminator'
@@ -74,9 +78,9 @@ args = parser.parse_args()
 # *Device configuration
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-cloud_dir = '/content/gdrive/My Drive/train_dropout/'
-saved_model_path = 'trained_model_%s_%s_%s_%s' % (args.lang, args.model, args.embedding, args.trained_seed)
-saved_postag_path = 'trained_model_%s_%s_%s_postag' % (args.lang, args.model, args.embedding)
+cloud_dir = '/content/gdrive/My Drive/'
+saved_model_path = 'train_dropout/trained_model_%s_%s_%s_%s' % (args.lang, args.model, args.embedding, args.trained_seed)
+saved_postag_path = 'train_dropout/trained_model_%s_%s_%s_postag' % (args.lang, args.model, args.embedding)
 logger_dir = '%s/logs/run%s/' % (saved_postag_path, args.run)
 logger_val_dir = '%s/logs/val-run%s/' % (saved_postag_path, args.run)
 logger_val_cosine_dir = '%s/logs/val-cosine-run%s/' % (saved_postag_path, args.run)
@@ -268,12 +272,28 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
             embeddings = Variable(word_embedding.word_embedding(inputs), requires_grad=True)
         else:
             words = [word_embedding.idxs2words(x) for x in X]
-            idxs = char_embed.char_sents_split(words).to(device)
-            if args.model != 'lstm': idxs = idxs.unsqueeze(1)
-            inputs = Variable(idxs)
+            idxs = char_embed.char_sents_split(words)
+            # if args.model != 'lstm': idxs = idxs.unsqueeze(1)
+            # idxs = char_embed.char_split(words)
+            if args.model == 'lstm':
+                # idxs_stacked = torch.stack(idxs)
+                # idxs_len = torch.LongTensor([len(data) for data in idxs])
+                # idxs_sorted, idxs_argsort = idxs_len.sort(descending=True)
+                # idxs = sort_idxs(idxs, idxs_argsort)      
+                # idxs_len_sorted = sort_idxs(idxs_len, idxs_argsort)
+                # inputs = (idxs, idxs_len_sorted) # (batch x seq_len)
+                # generated_embeddings = model.forward(inputs)
+                # _, argargsort = idxs_argsort.sort()
+                # generated_embeddings = torch.stack(sort_idxs(generated_embeddings, argargsort)).view(X.size(0),-1,emb_dim)
+                generated_embeddings = model.forward(idxs).view(X.size(0),-1,emb_dim)
+            else: 
+                idxs = nn.utils.rnn.pad_sequence(idxs, batch_first=True)
+                idxs = idxs.unsqueeze(1)
+                inputs = Variable(idxs).to(device) # (batch x channel x seq_len)
+                generated_embeddings = model.forward(inputs).view(X.size(0),-1,emb_dim)
+            
             mask = (X < original_vocab_len).type(torch.FloatTensor).unsqueeze(2).to(device)
             pretrained_embeddings = word_embedding.word_embedding(Variable(X).to(device))
-            generated_embeddings = model.forward(inputs).view(X.size(0),-1,emb_dim)
             embeddings = mask * pretrained_embeddings + (1-mask) * generated_embeddings
 
         target = Variable(y).to(device)
@@ -313,13 +333,27 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
             embeddings = word_embedding.word_embedding(inputs)
         else:
             words = [word_embedding.idxs2words(x) for x in X]
-            idxs = char_embed.char_sents_split(words).to(device)
-            if args.model != 'lstm': idxs = idxs.unsqueeze(1)
-            inputs = Variable(idxs)
+            idxs = char_embed.char_sents_split(words)
+            if args.model == 'lstm':
+                # idxs_stacked = torch.stack(idxs)
+                # idxs_len = torch.LongTensor([len(data) for data in idxs])
+                # idxs_sorted, idxs_argsort = idxs_len.sort(descending=True)
+                # idxs = sort_idxs(idxs, idxs_argsort)      
+                # idxs_len_sorted = sort_idxs(idxs_len, idxs_argsort)
+                # inputs = (idxs, idxs_len_sorted) # (batch x seq_len)
+                # generated_embeddings = model.forward(inputs)
+                # _, argargsort = idxs_argsort.sort()
+                # generated_embeddings = torch.stack(sort_idxs(generated_embeddings, argargsort)).view(X.size(0),-1,emb_dim)
+                generated_embeddings = model.forward(idxs).view(X.size(0),-1,emb_dim)
+            else: 
+                idxs = nn.utils.rnn.pad_sequence(idxs, batch_first=True)
+                idxs = idxs.unsqueeze(1)
+                inputs = Variable(idxs).to(device) # (batch x channel x seq_len)
+                generated_embeddings = model.forward(inputs).view(X.size(0),-1,emb_dim)
             mask = (X < original_vocab_len).type(torch.FloatTensor).unsqueeze(2).to(device)
-            pretrained_embeddings = word_embedding.word_embedding(X.to(device))
-            generated_embeddings = model.forward(inputs).view(X.size(0),-1,emb_dim)
+            pretrained_embeddings = word_embedding.word_embedding(Variable(X).to(device))
             embeddings = mask * pretrained_embeddings + (1-mask) * generated_embeddings
+            
         target = Variable(y).to(device)
         # output = postagger.forward(w_embedding).permute(0, 2, 1)
         output, validation_loss = postagger.validation(embeddings, target)
@@ -363,12 +397,25 @@ for it, (X, y) in enumerate(validation_loader):
         embeddings = word_embedding.word_embedding(inputs)
     else:
         words = [word_embedding.idxs2words(x) for x in X]
-        idxs = char_embed.char_sents_split(words).to(device)
-        if args.model != 'lstm': idxs = idxs.unsqueeze(1)
-        inputs = Variable(idxs)
+        idxs = char_embed.char_sents_split(words)
+        if args.model == 'lstm':
+            # idxs_stacked = torch.stack(idxs)
+            # idxs_len = torch.LongTensor([len(data) for data in idxs])
+            # idxs_sorted, idxs_argsort = idxs_len.sort(descending=True)
+            # idxs = sort_idxs(idxs, idxs_argsort)      
+            # idxs_len_sorted = sort_idxs(idxs_len, idxs_argsort)
+            # inputs = (idxs, idxs_len_sorted) # (batch x seq_len)
+            # generated_embeddings = model.forward(inputs)
+            # _, argargsort = idxs_argsort.sort()
+            # generated_embeddings = torch.stack(sort_idxs(generated_embeddings, argargsort)).view(X.size(0),-1,emb_dim)
+            generated_embeddings = model.forward(idxs).view(X.size(0),-1,emb_dim)
+        else: 
+            idxs = nn.utils.rnn.pad_sequence(idxs, batch_first=True)
+            idxs = idxs.unsqueeze(1)
+            inputs = Variable(idxs).to(device) # (batch x channel x seq_len)
+            generated_embeddings = model.forward(inputs).view(X.size(0),-1,emb_dim)
         mask = (X < original_vocab_len).type(torch.FloatTensor).unsqueeze(2).to(device)
-        pretrained_embeddings = word_embedding.word_embedding(X.to(device))
-        generated_embeddings = model.forward(inputs).view(X.size(0),-1,emb_dim)
+        pretrained_embeddings = word_embedding.word_embedding(Variable(X).to(device))
         embeddings = mask * pretrained_embeddings + (1-mask) * generated_embeddings
     target = Variable(y).to(device)
     # output = postagger.forward(w_embedding).permute(0, 2, 1)

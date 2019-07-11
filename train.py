@@ -253,11 +253,12 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
         words = dataset.idxs2words(X)
         idxs = char_embed.char_split(words)
         if args.model == 'lstm':
-            idxs_len = torch.LongTensor([len(data) for data in idxs])
-            idxs_sorted, idxs_argsort = idxs_len.sort(descending=True)
-            idxs = sort_idxs(idxs, idxs_argsort)      
-            idxs_len_sorted = sort_idxs(idxs_len, idxs_argsort)
-            inputs = (idxs, idxs_len_sorted) # (batch x seq_len)
+            # idxs_len = torch.LongTensor([len(data) for data in idxs])
+            # idxs_sorted, idxs_argsort = idxs_len.sort(descending=True)
+            # idxs = sort_idxs(idxs, idxs_argsort)      
+            # idxs_len_sorted = sort_idxs(idxs_len, idxs_argsort)
+            # inputs = (idxs, idxs_len_sorted) # (batch x seq_len)
+            inputs = idxs
         else: 
             idxs = nn.utils.rnn.pad_sequence(idxs, batch_first=True)
             idxs = idxs.unsqueeze(1)
@@ -316,11 +317,12 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
         words = dataset.idxs2words(X)
         idxs = char_embed.char_split(words)
         if args.model == 'lstm':
-            idxs_len = torch.LongTensor([len(data) for data in idxs])
-            idxs_sorted, idxs_argsort = idxs_len.sort(descending=True)
-            idxs = sort_idxs(idxs, idxs_argsort)      
-            idxs_len_sorted = sort_idxs(idxs_len, idxs_argsort)
-            inputs = (idxs, idxs_len_sorted) # (batch x seq_len)
+            # idxs_len = torch.LongTensor([len(data) for data in idxs])
+            # idxs_sorted, idxs_argsort = idxs_len.sort(descending=True)
+            # idxs = sort_idxs(idxs, idxs_argsort)      
+            # idxs_len_sorted = sort_idxs(idxs_len, idxs_argsort)
+            # inputs = (idxs, idxs_len_sorted) # (batch x seq_len)
+            inputs = idxs
         else: 
             idxs = nn.utils.rnn.pad_sequence(idxs, batch_first=True)
             idxs = idxs.unsqueeze(1)
@@ -359,24 +361,37 @@ f = open(f'{saved_model_path}/trained_embedding_{args.model}.txt', 'w')
 for it, (X, y) in enumerate(train_loader):
     model.zero_grad()
     words = dataset.idxs2words(X)
-    idxs = char_embed.char_split(words).to(device)
-    if args.model != 'lstm': idxs = idxs.unsqueeze(1)
-    inputs = Variable(idxs) # (length x batch x char_emb_dim)
+    idxs = char_embed.char_split(words)
+    if args.model == 'lstm':
+        # idxs_len = torch.LongTensor([len(data) for data in idxs])
+        # idxs_sorted, idxs_argsort = idxs_len.sort(descending=True)
+        # idxs = sort_idxs(idxs, idxs_argsort)      
+        # idxs_len_sorted = sort_idxs(idxs_len, idxs_argsort)
+        # inputs = (idxs, idxs_len_sorted) # (batch x seq_len)
+        inputs = idxs
+    else: 
+        idxs = nn.utils.rnn.pad_sequence(idxs, batch_first=True)
+        idxs = idxs.unsqueeze(1)
+        inputs = Variable(idxs).to(device) # (batch x channel x seq_len)
 
     output = model.forward(inputs) # (batch x word_emb_dim)
     for w, e in zip(words,output):
-        f.write(f'{w} {" ".join(map(str,[weight for weight in e.data.cpu().tolist()]))}\n')
+        try:
+            f.write(f'{w} {" ".join(map(str,[weight for weight in e.data.cpu().tolist()]))}\n')
+        except UnicodeEncodeError:
+            pass
 
 mse_loss = 0.
 for it, (X, target) in enumerate(validation_loader):
     words = dataset.idxs2words(X)
     idxs = char_embed.char_split(words)
     if args.model == 'lstm':
-        idxs_len = torch.LongTensor([len(data) for data in idxs])
-        idxs_sorted, idxs_argsort = idxs_len.sort(descending=True)
-        idxs = sort_idxs(idxs, idxs_argsort)      
-        idxs_len_sorted = sort_idxs(idxs_len, idxs_argsort)
-        inputs = (idxs, idxs_len_sorted) # (batch x seq_len)
+        # idxs_len = torch.LongTensor([len(data) for data in idxs])
+        # idxs_sorted, idxs_argsort = idxs_len.sort(descending=True)
+        # idxs = sort_idxs(idxs, idxs_argsort)      
+        # idxs_len_sorted = sort_idxs(idxs_len, idxs_argsort)
+        # inputs = (idxs, idxs_len_sorted) # (batch x seq_len)
+        inputs = idxs
     else: 
         idxs = nn.utils.rnn.pad_sequence(idxs, batch_first=True)
         idxs = idxs.unsqueeze(1)
@@ -387,7 +402,10 @@ for it, (X, target) in enumerate(validation_loader):
 
     output = model.forward(inputs) # (batch x word_emb_dim)
     for w, e in zip(words,output):
-        f.write(f'{w} {" ".join(map(str,[weight for weight in e.data.cpu().tolist()]))}\n')        
+        try:
+            f.write(f'{w} {" ".join(map(str,[weight for weight in e.data.cpu().tolist()]))}\n')
+        except UnicodeEncodeError:
+            pass
     mse_loss += (((output-target)**2).sum() / ((dataset_size-split))).sum()
     distance, nearest_neighbor = cosine_similarity(output, word_embedding, neighbor=neighbor)
     if it < 3:

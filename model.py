@@ -24,10 +24,12 @@ class mimick(nn.Module):
         )
 
     def forward(self, inputs):
-        x = [self.embedding(Variable(i).to(device)).float() for i in inputs[0]]
-        x = nn.utils.rnn.pad_sequence(x, batch_first=True)
-        padded_x = torch.nn.utils.rnn.pack_padded_sequence(x, lengths=inputs[1], batch_first=True).to(device)
-        _, (hidden_state, _) = self.lstm(padded_x)
+        # x = [self.embedding(Variable(i).to(device)).float() for i in inputs[0]]
+        # x = nn.utils.rnn.pad_sequence(inputs, batch_first=True)
+        x = nn.utils.rnn.pack_sequence(inputs, enforce_sorted=False).to(device)
+        x = nn.utils.rnn.PackedSequence(self.embedding(x.data), x.batch_sizes)
+        # padded_x = nn.utils.rnn.pad_packed_sequence(x, batch_first=True)
+        _, (hidden_state, _) = self.lstm(x)
         out_cat = (hidden_state[0, :, :] + hidden_state[1, :, :])
         out = self.mlp(out_cat)
         return out
