@@ -15,7 +15,7 @@ class mimick(nn.Module):
         self.embedding = nn.Embedding(embedding.num_embeddings, embedding.embedding_dim)
         self.embedding.weight.data.copy_(embedding.weight.data)
         self.hidden_size = hidden_size
-        self.lstm = nn.LSTM(char_emb_dim, self.hidden_size, 1, bidirectional=True, batch_first=True)
+        self.lstm = nn.LSTM(char_emb_dim, self.hidden_size, 1, bidirectional=True, batch_first=False)
         self.mlp = nn.Sequential(
             nn.Linear(self.hidden_size, 300),
             nn.ReLU(),
@@ -25,11 +25,11 @@ class mimick(nn.Module):
 
     def forward(self, inputs):
         # x = [self.embedding(Variable(i).to(device)).float() for i in inputs[0]]
-        x = nn.utils.rnn.pad_sequence(inputs[0], batch_first=True)
-        x = nn.utils.rnn.pack_padded_sequence(x.transpose(0,1), lengths=inputs[1], enforce_sorted=False).to(device)
-        x = nn.utils.rnn.PackedSequence(self.embedding(x.data), x.batch_sizes)
+        x = nn.utils.rnn.pad_sequence(inputs[0], batch_first=True).to(device)
+        x_padded = nn.utils.rnn.pack_padded_sequence(x, lengths=inputs[1], enforce_sorted=False, batch_first=True)
+        x_packed_padded = nn.utils.rnn.PackedSequence(self.embedding(x_padded.data), x_padded.batch_sizes)
         # padded_x = nn.utils.rnn.pad_packed_sequence(x, batch_first=True)
-        _, (hidden_state, _) = self.lstm(x)
+        _, (hidden_state, _) = self.lstm(x_packed_padded)
         out_cat = (hidden_state[0, :, :] + hidden_state[1, :, :])
         out = self.mlp(out_cat)
         return out
