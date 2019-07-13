@@ -155,12 +155,22 @@ if args.words == None:
 else:
     words = 'MCT McNeally Vercellotti Secretive corssing flatfish compartmentalize pesky lawnmower developiong hurtling expectedly'.split() + args.words
 
-idxs = char_embed.char_split(words).to(device)
-if args.model != 'lstm': idxs = idxs.unsqueeze(1)
-inputs = Variable(idxs) # (length x batch x char_emb_dim)
+idxs = char_embed.char_split(words)
+if args.model == 'lstm':
+    idxs_len = torch.LongTensor([len(data) for data in idxs])
+    # idxs_sorted, idxs_argsort = idxs_len.sort(descending=True)
+    # idxs = sort_idxs(idxs, idxs_argsort)      
+    # idxs_len_sorted = sort_idxs(idxs_len, idxs_argsort)
+    # inputs = (idxs, idxs_len_sorted) # (batch x seq_len)
+    inputs = (idxs, idxs_len)
+else: 
+    idxs = nn.utils.rnn.pad_sequence(idxs, batch_first=True)
+    idxs = idxs.unsqueeze(1)
+    inputs = Variable(idxs).to(device) # (batch x channel x seq_len)
 output = model.forward(inputs) # (batch x word_emb_dim)
 
 cos_dist, nearest_neighbor = cosine_similarity(output.to(device), dataset.word_embedding.weight.to(device), neighbor)
 
 for i, word in enumerate(words):
-    print(f'{cos_dist[i][0].item():.4f} | {word} \t=> {dataset.idxs2sentence(nearest_neighbor[i])}')
+    print(f'{word} & {dataset.idxs2sentence(nearest_neighbor[i])}\\\\')
+    # print(f'{cos_dist[i][0].item():.4f} | {word} \t=> {dataset.idxs2sentence(nearest_neighbor[i])}')

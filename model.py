@@ -25,9 +25,9 @@ class mimick(nn.Module):
 
     def forward(self, inputs):
         # x = [self.embedding(Variable(i).to(device)).float() for i in inputs[0]]
-        x = nn.utils.rnn.pad_sequence(inputs[0], batch_first=True).to(device)
-        x_padded = nn.utils.rnn.pack_padded_sequence(x, lengths=inputs[1], enforce_sorted=False, batch_first=True)
-        x_packed_padded = nn.utils.rnn.PackedSequence(self.embedding(x_padded.data), x_padded.batch_sizes)
+        x_padded = nn.utils.rnn.pad_sequence(inputs[0], batch_first=True).to(device)
+        x_packed_padded = nn.utils.rnn.pack_padded_sequence(self.embedding(x_padded), lengths=inputs[1], enforce_sorted=False, batch_first=True)
+        # x_packed_padded = nn.utils.rnn.PackedSequence(x_padded.data), x_padded.batch_sizes)
         # padded_x = nn.utils.rnn.pad_packed_sequence(x, batch_first=True)
         _, (hidden_state, _) = self.lstm(x_packed_padded)
         out_cat = (hidden_state[0, :, :] + hidden_state[1, :, :])
