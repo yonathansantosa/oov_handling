@@ -60,8 +60,6 @@ class Char_embedding:
         '''
         char_data = []
         numbers = set(['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'])
-        # split_sentence = sentence.split()
-        # split_sentence = sentence.split()
 
         # for word in sentence:
         #     if word == '<pad>':
@@ -100,35 +98,48 @@ class Char_embedding:
 
         sentence = list of words
         '''
-        numbers = set(['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'])
-        # split_sentence = sentence.split()
-        # split_sentence = sentence.split()
+        # numbers = set(['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'])
+
+        # sents_data = []
+        # for sentence in sentences:
+        #     char_data = []
+        #     for word in sentence:
+        #         if word == '<pad>':
+        #             char_data += [[self.char2idx['<pad>']] * self.char_max_len]
+        #         else:
+        #             c = list(word)
+        #             c = ['<sow>'] + c
+        #             if len(c) > self.char_max_len:
+        #                 # c_idx = [self.char2idx['#'] if x in numbers else self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c[:self.char_max_len]]
+        #                 c_idx = [self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c[:self.char_max_len]]
+        #             elif len(c) <= self.char_max_len:
+        #                 # c_idx = [self.char2idx['#'] if x in numbers else self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c]
+        #                 c_idx = [self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c]                
+        #                 if len(c_idx) < self.char_max_len: c_idx.append(self.char2idx['<eow>'])
+        #                 for i in range(self.char_max_len-len(c)-1):
+        #                     c_idx.append(self.char2idx['<pad>'])
+        #             char_data += [c_idx]
+
+        #     char_data = torch.Tensor(char_data).long()
+        #     char_data = F.dropout(char_data, dropout)
+        #     sents_data += [char_data]
 
         sents_data = []
         for sentence in sentences:
             char_data = []
             for word in sentence:
                 if word == '<pad>':
-                    char_data += [[self.char2idx['<pad>']] * self.char_max_len]
+                    c_idx = torch.LongTensor([self.char2idx['<pad>']] * self.char_max_len)
+                    None
                 else:
                     c = list(word)
                     c = ['<sow>'] + c
-                    if len(c) > self.char_max_len:
-                        # c_idx = [self.char2idx['#'] if x in numbers else self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c[:self.char_max_len]]
-                        c_idx = [self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c[:self.char_max_len]]
-                    elif len(c) <= self.char_max_len:
-                        # c_idx = [self.char2idx['#'] if x in numbers else self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c]
-                        c_idx = [self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c]                
-                        if len(c_idx) < self.char_max_len: c_idx.append(self.char2idx['<eow>'])
-                        for i in range(self.char_max_len-len(c)-1):
-                            c_idx.append(self.char2idx['<pad>'])
-                    char_data += [c_idx]
+                    c_idx = torch.LongTensor([self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c])
+                    
+                char_data += [c_idx]
+            sents_data += char_data
 
-            char_data = torch.Tensor(char_data).long()
-            char_data = F.dropout(char_data, dropout)
-            sents_data += [char_data]
-        
-        return torch.cat(sents_data)
+        return sents_data
 
     def char2ix(self, c):
         return self.char2idx[c]
