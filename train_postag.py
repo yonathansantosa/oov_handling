@@ -192,10 +192,18 @@ for word in tagged_words:
         elif args.continue_model:
             new_word += [torch.zeros(emb_dim, dtype=torch.float)]
         else:
-            inputs = char_embed.word2idxs(word).unsqueeze(0).to(device).detach()
-            if args.model != 'lstm': inputs = inputs.unsqueeze(1)
-            output = model.forward(inputs).detach()
-            new_word += [output.cpu()]
+            idxs = char_embed.word2idxs(word).unsqueeze(0).to(device).detach()
+            if args.model == 'lstm':
+                # idxs_stacked = torch.stack(idxs)
+                idxs_len = torch.LongTensor([len(data) for data in idxs])
+                generated_embeddings = model.forward((idxs, idxs_len)).detach()
+            else: 
+                idxs = nn.utils.rnn.pad_sequence(idxs, batch_first=True)
+                idxs = idxs.unsqueeze(1)
+                inputs = Variable(idxs).to(device) # (batch x channel x seq_len)
+                generated_embeddings = model.forward(inputs).detach()
+            # output = model.forward(inputs).detach()
+            new_word += [generated_embeddings.cpu()]
         oov += 1
     else:
         invocab += 1
@@ -208,10 +216,16 @@ if args.oov_random:
 elif args.continue_model:
     new_word += [torch.zeros(emb_dim, dtype=torch.float)]
 else:
-    inputs = char_embed.word2idxs('<pad>').unsqueeze(0).to(device).detach()
-    if args.model != 'lstm': inputs = inputs.unsqueeze(1)
-    output = model.forward(inputs).detach()                    
-    new_word += [output.cpu()]
+    idxs = char_embed.word2idxs('<pad>').unsqueeze(0).to(device).detach()
+    if args.model == 'lstm':
+        idxs_len = torch.LongTensor([len(data) for data in idxs])
+        generated_embeddings = model.forward((idxs, idxs_len)).detach()
+    else: 
+        idxs = nn.utils.rnn.pad_sequence(idxs, batch_first=True)
+        idxs = idxs.unsqueeze(1)
+        inputs = Variable(idxs).to(device) # (batch x channel x seq_len)
+        generated_embeddings = model.forward(inputs).detach()                 
+    new_word += [generated_embeddings.cpu()]
     
 new_word = torch.stack(new_word).squeeze()
         
