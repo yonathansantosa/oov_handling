@@ -251,7 +251,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     for it, (X, y) in enumerate(train_loader):
         model.zero_grad()
         words = dataset.idxs2words(X)
-        idxs = char_embed.char_split(words)
+        idxs = char_embed.char_split(words, args.model)
         if args.model == 'lstm':
             idxs_len = torch.LongTensor([len(data) for data in idxs])
             # idxs_sorted, idxs_argsort = idxs_len.sort(descending=True)
@@ -315,7 +315,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     mse_loss = 0.
     for it, (X, target) in enumerate(validation_loader):
         words = dataset.idxs2words(X)
-        idxs = char_embed.char_split(words)
+        idxs = char_embed.char_split(words, args.model)
         if args.model == 'lstm':
             idxs_len = torch.LongTensor([len(data) for data in idxs])
             # idxs_sorted, idxs_argsort = idxs_len.sort(descending=True)
@@ -361,7 +361,7 @@ f = open(f'{saved_model_path}/trained_embedding_{args.model}.txt', 'w')
 for it, (X, y) in enumerate(train_loader):
     model.zero_grad()
     words = dataset.idxs2words(X)
-    idxs = char_embed.char_split(words)
+    idxs = char_embed.char_split(words, args.model)
     if args.model == 'lstm':
         idxs_len = torch.LongTensor([len(data) for data in idxs])
         # idxs_sorted, idxs_argsort = idxs_len.sort(descending=True)
@@ -384,7 +384,7 @@ for it, (X, y) in enumerate(train_loader):
 mse_loss = 0.
 for it, (X, target) in enumerate(validation_loader):
     words = dataset.idxs2words(X)
-    idxs = char_embed.char_split(words)
+    idxs = char_embed.char_split(words, args.model)
     if args.model == 'lstm':
         idxs_len = torch.LongTensor([len(data) for data in idxs])
         # idxs_sorted, idxs_argsort = idxs_len.sort(descending=True)

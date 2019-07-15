@@ -49,7 +49,7 @@ class Char_embedding:
             self.char2idx[c] = int(i)
             self.idx2char[i] = c
 
-    def char_split(self, sentence, dropout=0.):
+    def char_split(self, sentence, model_name='lstm', dropout=0.):
         '''
         Splitting character of a sentences then converting it
         into list of index
@@ -81,13 +81,18 @@ class Char_embedding:
         # char_data = torch.Tensor(char_data).long()
         # char_data = F.dropout(char_data, dropout)
         # return char_data
-
-        for word in sentence:
-            c = list(word)
-            c = ['<sow>'] + c
-            c_idx = torch.LongTensor([self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c[:self.char_max_len]])
-            char_data += [c_idx]
-        
+        if model_name != 'lstm':
+            for word in sentence:
+                c = list(word)
+                c = ['<sow>'] + c
+                c_idx = torch.LongTensor([self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c[:self.char_max_len]])
+                char_data += [c_idx]
+        else:
+            for word in sentence:
+                c = list(word)
+                c = ['<sow>'] + c
+                c_idx = torch.LongTensor([self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c])
+                char_data += [c_idx]
         return char_data
     def char_sents_split(self, sentences, dropout=0.):
         '''
@@ -158,12 +163,14 @@ class Char_embedding:
             if len(chars) > self.char_max_len:
                 # c_idx = [self.char2idx['#'] if x in numbers else self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c[:self.char_max_len]]
                 c_idx = [self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in chars[:self.char_max_len]]
-            elif len(chars) <= self.char_max_len:
-                # c_idx = [self.char2idx['#'] if x in numbers else self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c]
-                c_idx = [self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in chars]                
-                if len(c_idx) < self.char_max_len: c_idx.append(self.char2idx['<eow>'])
-                for i in range(self.char_max_len-len(chars)-1):
-                    c_idx.append(self.char2idx['<pad>'])
+            else:
+                c_idx = [self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in chars]
+            # elif len(chars) <= self.char_max_len:
+            #     # c_idx = [self.char2idx['#'] if x in numbers else self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c]
+            #     c_idx = [self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in chars]                
+            #     if len(c_idx) < self.char_max_len: c_idx.append(self.char2idx['<eow>'])
+            #     for i in range(self.char_max_len-len(chars)-1):
+            #         c_idx.append(self.char2idx['<pad>'])
         else:
             c_idx = [self.char2idx['<pad>']] * self.char_max_len
         
