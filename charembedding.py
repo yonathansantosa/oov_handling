@@ -91,7 +91,9 @@ class Char_embedding:
             for word in sentence:
                 c = list(word)
                 c = ['<sow>'] + c
-                c_idx = torch.LongTensor([self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c])
+                c_idx = [self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c]
+                if len(c_idx) < 7:
+                    c_idx += [self.char2idx['<pad>']] * (7 - len(c_idx))
                 char_data += [c_idx]
         return char_data
     def char_sents_split(self, sentences, dropout=0.):
