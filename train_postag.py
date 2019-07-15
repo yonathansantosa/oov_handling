@@ -192,7 +192,7 @@ for word in tagged_words:
         elif args.continue_model:
             new_word += [torch.zeros(emb_dim, dtype=torch.float)]
         else:
-            idxs = char_embed.word2idxs(word).unsqueeze(0).to(device).detach()
+            idxs = char_embed.word2idxs(word, args.model).unsqueeze(0).to(device).detach()
             if args.model == 'lstm':
                 # idxs_stacked = torch.stack(idxs)
                 idxs_len = torch.LongTensor([len(data) for data in idxs])
@@ -286,7 +286,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
             embeddings = Variable(word_embedding.word_embedding(inputs), requires_grad=True)
         else:
             words = [word_embedding.idxs2words(x) for x in X]
-            idxs = char_embed.char_sents_split(words)
+            idxs = char_embed.char_sents_split(words, args.model)
             # if args.model != 'lstm': idxs = idxs.unsqueeze(1)
             # idxs = char_embed.char_split(words)
             if args.model == 'lstm':
@@ -347,7 +347,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
             embeddings = word_embedding.word_embedding(inputs)
         else:
             words = [word_embedding.idxs2words(x) for x in X]
-            idxs = char_embed.char_sents_split(words)
+            idxs = char_embed.char_sents_split(words, args.model)
             if args.model == 'lstm':
                 # idxs_stacked = torch.stack(idxs)
                 idxs_len = torch.LongTensor([len(data) for data in idxs])
@@ -411,7 +411,7 @@ for it, (X, y) in enumerate(validation_loader):
         embeddings = word_embedding.word_embedding(inputs)
     else:
         words = [word_embedding.idxs2words(x) for x in X]
-        idxs = char_embed.char_sents_split(words)
+        idxs = char_embed.char_sents_split(words, args.model)
         if args.model == 'lstm':
             # idxs_stacked = torch.stack(idxs)
             idxs_len = torch.LongTensor([len(data) for data in idxs])

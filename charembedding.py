@@ -81,22 +81,15 @@ class Char_embedding:
         # char_data = torch.Tensor(char_data).long()
         # char_data = F.dropout(char_data, dropout)
         # return char_data
-        if model_name != 'lstm':
-            for word in sentence:
-                c = list(word)
-                c = ['<sow>'] + c
-                c_idx = torch.LongTensor([self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c[:self.char_max_len]])
-                char_data += [c_idx]
-        else:
-            for word in sentence:
-                c = list(word)
-                c = ['<sow>'] + c
-                c_idx = [self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c]
-                if len(c_idx) < 7:
-                    c_idx += [self.char2idx['<pad>']] * (7 - len(c_idx))
-                char_data += [c_idx]
+        for word in sentence:
+            c = list(word)
+            c = ['<sow>'] + c
+            c_idx = [self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c]
+            if len(c_idx) < 7 and model_name != 'lstm':
+                c_idx += [self.char2idx['<pad>']] * (7 - len(c_idx))
+            char_data += [torch.LongTensor(c_idx)]
         return char_data
-    def char_sents_split(self, sentences, dropout=0.):
+    def char_sents_split(self, sentences, model_name='lstm', dropout=0.):
         '''
         Splitting character of a sentences then converting it
         into list of index
@@ -137,13 +130,13 @@ class Char_embedding:
             for word in sentence:
                 if word == '<pad>':
                     c_idx = torch.LongTensor([self.char2idx['<pad>']] * self.char_max_len)
-                    None
                 else:
                     c = list(word)
                     c = ['<sow>'] + c
-                    c_idx = torch.LongTensor([self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c])
-                    
-                char_data += [c_idx]
+                    c_idx = [self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c]
+                    if len(c_idx) < 7 and model_name != 'lstm':
+                        c_idx += [self.char2idx['<pad>']] * (7 - len(c_idx))
+                char_data += [torch.LongTensor(c_idx)]
             sents_data += char_data
 
         return sents_data
@@ -157,26 +150,34 @@ class Char_embedding:
     def idxs2word(self, idxs):
         return "".join([self.idx2char[idx] for idx in idxs])
 
-    def word2idxs(self, word):
-        char_data = []
-        if word != '<pad>':    
-            chars = list(word)
-            chars = ['<sow>'] + chars
-            if len(chars) > self.char_max_len:
-                # c_idx = [self.char2idx['#'] if x in numbers else self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c[:self.char_max_len]]
-                c_idx = [self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in chars[:self.char_max_len]]
-            else:
-                c_idx = [self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in chars]
-            # elif len(chars) <= self.char_max_len:
-            #     # c_idx = [self.char2idx['#'] if x in numbers else self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c]
-            #     c_idx = [self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in chars]                
-            #     if len(c_idx) < self.char_max_len: c_idx.append(self.char2idx['<eow>'])
-            #     for i in range(self.char_max_len-len(chars)-1):
-            #         c_idx.append(self.char2idx['<pad>'])
+    def word2idxs(self, word, model_name='lstm'):
+        # char_data = []
+        # if word != '<pad>':    
+        #     chars = list(word)
+        #     chars = ['<sow>'] + chars
+        #     if len(chars) > self.char_max_len:
+        #         # c_idx = [self.char2idx['#'] if x in numbers else self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c[:self.char_max_len]]
+        #         c_idx = [self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in chars[:self.char_max_len]]
+        #     else:
+        #         c_idx = [self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in chars]
+        #     # elif len(chars) <= self.char_max_len:
+        #     #     # c_idx = [self.char2idx['#'] if x in numbers else self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c]
+        #     #     c_idx = [self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in chars]                
+        #     #     if len(c_idx) < self.char_max_len: c_idx.append(self.char2idx['<eow>'])
+        #     #     for i in range(self.char_max_len-len(chars)-1):
+        #     #         c_idx.append(self.char2idx['<pad>'])
+        # else:
+        #     c_idx = [self.char2idx['<pad>']] * self.char_max_len
+        if word != '<pad>':
+            c = list(word)
+            c = ['<sow>'] + c
+            char_data = [self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c]
+            if model_name != 'lstm':
+                char_data += [self.char2idx['<pad>']] * (7 - len(char_data))
+            # char_data += [torch.LongTensor(c_idx)]
         else:
-            c_idx = [self.char2idx['<pad>']] * self.char_max_len
-        
-        char_data += c_idx
+            char_data = [self.char2idx['<pad>']] * self.char_max_len
+        # char_data += c_idx
 
         return torch.LongTensor(char_data)
 
