@@ -69,7 +69,8 @@ parser.add_argument('--seq_len', default=5)
 parser.add_argument('--seed', default=64)
 parser.add_argument('--trained_seed', default=64)
 parser.add_argument('--tagset', default='brown')
-parser.add_argument('--continue_model', default=False, action='store_true')
+parser.add_argument('--freeze', default=False, action='store_true')
+parser.add_argument('--cnngrams', nargs='+')
 
 args = parser.parse_args()
 #endregion
@@ -139,13 +140,23 @@ elif args.model == 'cnn2':
         num_feature=int(args.num_feature), 
         random=False, asc=args.asc)
 elif args.model == 'cnn':
-    model = mimick_cnn(
-        embedding=char_embed.embed,
-        char_max_len=char_embed.char_max_len, 
-        char_emb_dim=char_embed.char_emb_dim, 
-        emb_dim=emb_dim,
-        num_feature=int(args.num_feature),
-        random=False, asc=args.asc)
+    if args.cnngrams != None:
+        features = [int(g) for g in args.cnngrams]
+        model = mimick_cnn(
+            embedding=char_embed.embed,
+            char_max_len=char_embed.char_max_len, 
+            char_emb_dim=char_embed.char_emb_dim, 
+            emb_dim=emb_dim,
+            num_feature=int(args.num_feature),
+            random=False, asc=args.asc, features=features)
+    else:
+        model = mimick_cnn(
+            embedding=char_embed.embed,
+            char_max_len=char_embed.char_max_len, 
+            char_emb_dim=char_embed.char_emb_dim, 
+            emb_dim=emb_dim,
+            num_feature=int(args.num_feature),
+            random=False, asc=args.asc)
 elif args.model == 'cnn3':
     model = mimick_cnn3(
         embedding=char_embed.embed,
@@ -189,7 +200,7 @@ for word in tagged_words:
         word_embedding.itos += [word]
         if args.oov_random:
             new_word += [torch.normal(torch.zeros(emb_dim, dtype=torch.float), std=3.0, out=None)]
-        elif args.continue_model:
+        elif not args.freeze:
             new_word += [torch.zeros(emb_dim, dtype=torch.float)]
         else:
             idxs = char_embed.word2idxs(word, args.model).unsqueeze(0).to(device).detach()
@@ -213,7 +224,7 @@ print('invocab = %d' % invocab)
 
 if args.oov_random:
     new_word += [torch.normal(torch.zeros(emb_dim, dtype=torch.float), std=3.0, out=None)]
-elif args.continue_model:
+elif not args.freeze:
     new_word += [torch.zeros(emb_dim, dtype=torch.float)]
 else:
     idxs = char_embed.word2idxs('<pad>').unsqueeze(0).to(device).detach()
@@ -261,7 +272,7 @@ postagger = Postagger_adaptive(seq_len, emb_dim, 20, len(dataset.tagset)).to(dev
 if args.load:
     postagger.load_state_dict(torch.load('%s/postag.pth' % (saved_postag_path)))
     
-if args.continue_model:
+if not args.freeze:
     optimizer = optim.SGD(list(postagger.parameters()) + list(model.parameters()), lr=learning_rate, momentum=momentum, nesterov=args.nesterov)
 else:
     optimizer = optim.SGD(postagger.parameters(), lr=learning_rate, momentum=momentum, nesterov=args.nesterov)
@@ -278,10 +289,10 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     loss_item = 0.
     postagger.train()
     
-    if args.continue_model: model.train()
+    if not args.freeze: model.train()
     for it, (X, y) in enumerate(train_loader):
         postagger.zero_grad()
-        if not args.continue_model:
+        if args.freeze:
             inputs = X.to(device)
             embeddings = Variable(word_embedding.word_embedding(inputs), requires_grad=True)
         else:
@@ -342,7 +353,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     validation_loss = 0.
     accuracy = 0.
     for it, (X, y) in enumerate(validation_loader):
-        if not args.continue_model:
+        if args.freeze:
             inputs = Variable(X).to(device)
             embeddings = word_embedding.word_embedding(inputs)
         else:
@@ -406,7 +417,7 @@ model.eval()
 
 accuracy = 0.
 for it, (X, y) in enumerate(validation_loader):
-    if not args.continue_model:
+    if args.freeze:
         inputs = Variable(X).to(device)
         embeddings = word_embedding.word_embedding(inputs)
     else:

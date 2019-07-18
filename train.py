@@ -124,6 +124,8 @@ parser.add_argument('--multiplier', default=1)
 parser.add_argument('--classif', default=200)
 parser.add_argument('--neighbor', default=5)
 parser.add_argument('--seed', default=64)
+parser.add_argument('--cnngrams', nargs='+')
+
 
 args = parser.parse_args()
 
@@ -205,13 +207,23 @@ elif args.model == 'cnn2':
         num_feature=int(args.num_feature), 
         random=False, asc=args.asc)
 elif args.model == 'cnn':
-    model = mimick_cnn(
-        embedding=char_embed.embed,
-        char_max_len=char_embed.char_max_len, 
-        char_emb_dim=char_embed.char_emb_dim, 
-        emb_dim=emb_dim,
-        num_feature=int(args.num_feature), 
-        random=False, asc=args.asc)
+    if args.cnngrams != None:
+        features = [int(g) for g in args.cnngrams]
+        model = mimick_cnn(
+            embedding=char_embed.embed,
+            char_max_len=char_embed.char_max_len, 
+            char_emb_dim=char_embed.char_emb_dim, 
+            emb_dim=emb_dim,
+            num_feature=int(args.num_feature),
+            random=False, asc=args.asc, features=features)
+    else:
+        model = mimick_cnn(
+            embedding=char_embed.embed,
+            char_max_len=char_embed.char_max_len, 
+            char_emb_dim=char_embed.char_emb_dim, 
+            emb_dim=emb_dim,
+            num_feature=int(args.num_feature),
+            random=False, asc=args.asc)
 elif args.model == 'cnn3':
     model = mimick_cnn3(
         embedding=char_embed.embed,

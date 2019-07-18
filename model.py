@@ -35,7 +35,7 @@ class mimick(nn.Module):
         return out
 
 class mimick_cnn(nn.Module):
-    def __init__(self, embedding,  char_max_len=15, char_emb_dim=300, emb_dim=300, num_feature=100, random=False, asc=False):
+    def __init__(self, embedding,  char_max_len=15, char_emb_dim=300, emb_dim=300, num_feature=100, random=False, asc=False, features=[2,3,4,5,6,7]):
         super(mimick_cnn, self).__init__()
         self.embedding = nn.Embedding(embedding.num_embeddings, embedding.embedding_dim)
         self.embedding.weight.data.copy_(embedding.weight.data)
@@ -46,7 +46,8 @@ class mimick_cnn(nn.Module):
         self.conv6 = nn.Conv2d(1, num_feature, (6, char_emb_dim), bias=False)
         self.conv7 = nn.Conv2d(1, num_feature, (7, char_emb_dim), bias=False)
         self.inputs = None
-
+        self.features = np.zeros(6)
+        self.features[np.array(features)[:]-2] = 1
         self.mlp1 = nn.Sequential(
             nn.Linear(num_feature*6, emb_dim),
             nn.Hardtanh(min_val=-3.0, max_val=3.0),
@@ -65,12 +66,12 @@ class mimick_cnn(nn.Module):
     def forward(self, inputs):
         self.inputs = inputs
         x = self.embedding(self.inputs).float()
-        x2 = self.conv2(x).relu().squeeze(-1)
-        x3 = self.conv3(x).relu().squeeze(-1)
-        x4 = self.conv4(x).relu().squeeze(-1)
-        x5 = self.conv5(x).relu().squeeze(-1)
-        x6 = self.conv6(x).relu().squeeze(-1)
-        x7 = self.conv7(x).relu().squeeze(-1)
+        x2 = self.conv2(x).relu().squeeze(-1) * self.features[0]
+        x3 = self.conv3(x).relu().squeeze(-1) * self.features[1]
+        x4 = self.conv4(x).relu().squeeze(-1) * self.features[2]
+        x5 = self.conv5(x).relu().squeeze(-1) * self.features[3]
+        x6 = self.conv6(x).relu().squeeze(-1) * self.features[4]
+        x7 = self.conv7(x).relu().squeeze(-1) * self.features[5]
 
 
         x2_max = F.max_pool1d(x2, x2.shape[2]).squeeze(-1)
