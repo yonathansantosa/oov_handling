@@ -39,6 +39,7 @@ class mimick_cnn(nn.Module):
         super(mimick_cnn, self).__init__()
         self.embedding = nn.Embedding(embedding.num_embeddings, embedding.embedding_dim)
         self.embedding.weight.data.copy_(embedding.weight.data)
+        self.num_feature = num_feature
         self.conv2 = nn.Conv2d(1, num_feature, (2, char_emb_dim), bias=False)
         self.conv3 = nn.Conv2d(1, num_feature, (3, char_emb_dim), bias=False)
         self.conv4 = nn.Conv2d(1, num_feature, (4, char_emb_dim), bias=False)
@@ -66,12 +67,14 @@ class mimick_cnn(nn.Module):
     def forward(self, inputs):
         self.inputs = inputs
         x = self.embedding(self.inputs).float()
-        x2 = self.conv2(x).relu().squeeze(-1) * self.features[0]
-        x3 = self.conv3(x).relu().squeeze(-1) * self.features[1]
-        x4 = self.conv4(x).relu().squeeze(-1) * self.features[2]
-        x5 = self.conv5(x).relu().squeeze(-1) * self.features[3]
-        x6 = self.conv6(x).relu().squeeze(-1) * self.features[4]
-        x7 = self.conv7(x).relu().squeeze(-1) * self.features[5]
+        sizes = torch.Size((x.shape[0], self.num_feature, x.shape[3]))
+        zeroes = torch.zeros(sizes, dtype=torch.float, device=x.device)
+        x2 = self.conv2(x).relu().squeeze(-1) if self.features[0] != 0 else zeroes
+        x3 = self.conv3(x).relu().squeeze(-1) if self.features[1] != 0 else zeroes
+        x4 = self.conv4(x).relu().squeeze(-1) if self.features[2] != 0 else zeroes
+        x5 = self.conv5(x).relu().squeeze(-1) if self.features[3] != 0 else zeroes
+        x6 = self.conv6(x).relu().squeeze(-1) if self.features[4] != 0 else zeroes
+        x7 = self.conv7(x).relu().squeeze(-1) if self.features[5] != 0 else zeroes
 
 
         x2_max = F.max_pool1d(x2, x2.shape[2]).squeeze(-1)
