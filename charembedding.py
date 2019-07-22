@@ -83,10 +83,12 @@ class Char_embedding:
         # return char_data
         for word in sentence:
             c = list(word)
-            c = ['<sow>'] + c
+            c = ['<sow>'] + c +['<eow>']
             c_idx = [self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c]
-            if len(c_idx) < 7 and model_name != 'lstm':
-                c_idx += [self.char2idx['<pad>']] * (7 - len(c_idx))
+            if model_name != 'lstm':
+                c_idx = [self.char2idx['<pad>']] * (7 - len(c_idx)) + c_idx + [self.char2idx['<pad>']] * (7 - len(c_idx))
+            # if len(c_idx) < 7 and model_name != 'lstm':
+            #     c_idx += [self.char2idx['<pad>']] * (7 - len(c_idx))
             char_data += [torch.LongTensor(c_idx)]
         return char_data
     def char_sents_split(self, sentences, model_name='lstm', dropout=0.):
@@ -132,10 +134,10 @@ class Char_embedding:
                     c_idx = torch.LongTensor([self.char2idx['<pad>']] * self.char_max_len)
                 else:
                     c = list(word)
-                    c = ['<sow>'] + c
+                    c = ['<sow>'] + c +['<eow>']
                     c_idx = [self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c]
-                    if len(c_idx) < 7 and model_name != 'lstm':
-                        c_idx += [self.char2idx['<pad>']] * (7 - len(c_idx))
+                    if model_name != 'lstm':
+                        c_idx = [self.char2idx['<pad>']] * (7 - len(c_idx)) + c_idx + [self.char2idx['<pad>']] * (7 - len(c_idx))
                 char_data += [torch.LongTensor(c_idx)]
             sents_data += char_data
 
@@ -170,10 +172,10 @@ class Char_embedding:
         #     c_idx = [self.char2idx['<pad>']] * self.char_max_len
         if word != '<pad>':
             c = list(word)
-            c = ['<sow>'] + c
+            c = ['<sow>'] + c +['<eow>']
             char_data = [self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c]
             if model_name != 'lstm':
-                char_data += [self.char2idx['<pad>']] * (7 - len(char_data))
+                c_idx = [self.char2idx['<pad>']] * (7 - len(c_idx)) + c_idx + [self.char2idx['<pad>']] * (7 - len(c_idx))
             # char_data += [torch.LongTensor(c_idx)]
         else:
             char_data = [self.char2idx['<pad>']] * self.char_max_len
