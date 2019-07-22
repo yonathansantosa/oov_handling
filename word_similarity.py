@@ -101,10 +101,11 @@ parser.add_argument('--classif', default=20)
 parser.add_argument('--dataset', default='men')
 parser.add_argument('--load', default=False, action='store_true')
 parser.add_argument('--save', default=False, action='store_true')
-
+parser.add_argument('--cnngrams', nargs='+')
+parser.add_argument('--trained_seed', default=64)
 
 args = parser.parse_args()
-saved_model_path = f'train_dropout/trained_model_{args.lang}_{args.model}_{args.embedding}'
+saved_model_path = f'train_dropout/trained_model_{args.lang}_{args.model}_{args.embedding}_{args.trained_seed}'
 cloud_dir = '/content/gdrive/My Drive/'
 
 if not args.local:
@@ -140,13 +141,23 @@ if args.load:
             num_feature=int(args.num_feature), 
             random=False, asc=args.asc)
     elif args.model == 'cnn':
-        model = mimick_cnn(
-            embedding=char_embed.embed,
-            char_max_len=char_embed.char_max_len, 
-            char_emb_dim=char_embed.char_emb_dim, 
-            emb_dim=emb_dim,
-            num_feature=int(args.num_feature), 
-            random=False, asc=args.asc)
+        if args.cnngrams != None:
+            features = [int(g) for g in args.cnngrams]
+            model = mimick_cnn(
+                embedding=char_embed.embed,
+                char_max_len=char_embed.char_max_len, 
+                char_emb_dim=char_embed.char_emb_dim, 
+                emb_dim=emb_dim,
+                num_feature=int(args.num_feature),
+                random=False, asc=args.asc, features=features)
+        else:
+            model = mimick_cnn(
+                embedding=char_embed.embed,
+                char_max_len=char_embed.char_max_len, 
+                char_emb_dim=char_embed.char_emb_dim, 
+                emb_dim=emb_dim,
+                num_feature=int(args.num_feature),
+                random=False, asc=args.asc)
     elif args.model == 'cnn3':
         model = mimick_cnn3(
             embedding=char_embed.embed,
@@ -191,9 +202,16 @@ for d_names in dataset_names:
             word_embedding.stoi[w] = len(word_embedding.stoi)
             word_embedding.itos += [w]
             if args.load:
-                inputs = char_embed.word2idxs(w).unsqueeze(0).to(device).detach()
-                if args.model != 'lstm': inputs = inputs.unsqueeze(1)
-                output = model.forward(inputs).detach()
+                idxs = char_embed.word2idxs(w, args.model).unsqueeze(0).to(device).detach()
+                if args.model == 'lstm':
+                    # idxs_stacked = torch.stack(idxs)
+                    idxs_len = torch.LongTensor([len(data) for data in idxs])
+                    output = model.forward((idxs, idxs_len)).detach()
+                else: 
+                    idxs = nn.utils.rnn.pad_sequence(idxs, batch_first=True)
+                    idxs = idxs.unsqueeze(1)
+                    inputs = Variable(idxs).to(device) # (batch x channel x seq_len)
+                    output = model.forward(inputs).detach()
                 new_word += [output.cpu()]
             else:
                 new_word += [torch.randn(emb_dim)]
