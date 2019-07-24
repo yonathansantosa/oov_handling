@@ -35,10 +35,11 @@ class mimick(nn.Module):
         return out
 
 class mimick_cnn(nn.Module):
-    def __init__(self, embedding,  char_max_len=15, char_emb_dim=300, emb_dim=300, num_feature=100, random=False, asc=False, features=[2,3,4,5,6,7]):
+    def __init__(self, embedding,  char_max_len=15, char_emb_dim=300, emb_dim=300, num_feature=100, random=False, asc=False, features=[2,3,4,5,6,7], dropout=0.):
         super(mimick_cnn, self).__init__()
         self.embedding = nn.Embedding(embedding.num_embeddings, embedding.embedding_dim)
         self.embedding.weight.data.copy_(embedding.weight.data)
+        self.dropout = nn.Dropout(dropout)
         self.num_feature = num_feature
         self.conv2 = nn.Conv2d(1, num_feature, (2, char_emb_dim), bias=False)
         self.conv3 = nn.Conv2d(1, num_feature, (3, char_emb_dim), bias=False)
@@ -46,7 +47,6 @@ class mimick_cnn(nn.Module):
         self.conv5 = nn.Conv2d(1, num_feature, (5, char_emb_dim), bias=False)
         self.conv6 = nn.Conv2d(1, num_feature, (6, char_emb_dim), bias=False)
         self.conv7 = nn.Conv2d(1, num_feature, (7, char_emb_dim), bias=False)
-        self.inputs = None
         self.features = np.zeros(6)
         self.features[np.array(features)[:]-2] = 1
         self.mlp1 = nn.Sequential(
@@ -65,8 +65,8 @@ class mimick_cnn(nn.Module):
         )
 
     def forward(self, inputs):
-        self.inputs = inputs
-        x = self.embedding(self.inputs).float()
+        # inputs = self.dropout(inputs.double()
+        x = self.dropout(self.embedding(inputs).float())
         sizes = torch.Size((x.shape[0], self.num_feature, x.shape[3]))
         zeroes = torch.zeros(sizes, dtype=torch.float, device=x.device)
         x2 = self.conv2(x).relu().squeeze(-1) if self.features[0] != 0 else zeroes
