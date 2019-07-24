@@ -151,8 +151,8 @@ logger_val = Logger(logger_val_dir)
 
 
 # *Device configuration
-# device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-device = 'cpu'
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+# device = 'cpu'
 
 # *Parameters
 char_emb_dim = int(args.charembdim)
