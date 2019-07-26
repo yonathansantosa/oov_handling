@@ -178,7 +178,7 @@ class Char_embedding:
                 char_data = [self.char2idx['<pad>']] * 7 + char_data + [self.char2idx['<pad>']] * 7
             # char_data += [torch.LongTensor(c_idx)]
         else:
-            char_data = [self.char2idx['<pad>']] * self.char_max_len
+            char_data = [self.char2idx['<pad>']] * 2
         # char_data += c_idx
 
         return torch.LongTensor(char_data)
