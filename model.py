@@ -37,7 +37,7 @@ class mimick(nn.Module):
 class mimick_cnn(nn.Module):
     def __init__(self, embedding,  char_max_len=15, char_emb_dim=300, emb_dim=300, num_feature=100, random=False, asc=False, features=[2,3,4,5,6,7], dropout=0.):
         super(mimick_cnn, self).__init__()
-        self.embedding = nn.Embedding(embedding.num_embeddings, embedding.embedding_dim)
+        self.embedding = nn.Embedding(embedding.num_embeddings, embedding.embedding_dim, padding_idx=0)
         self.embedding.weight.data.copy_(embedding.weight.data)
         self.dropout = nn.Dropout(dropout)
         self.num_feature = num_feature

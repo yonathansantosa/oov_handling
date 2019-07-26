@@ -20,7 +20,7 @@ class Char_embedding:
             table = np.transpose(np.loadtxt(f'{self.embedding_folder}/glove.840B.300d-char.txt', dtype=str, delimiter=' ', comments='##'))
             self.weight_char = np.transpose(table[1:].astype(np.float))
             self.char = np.transpose(table[0])
-            self.embed = nn.Embedding(len(self.char), char_emb_dim, padding_idx=0).to(device)
+            self.embed = nn.Embedding(len(self.char), char_emb_dim).to(device)
             self.embed.weight[1] = torch.zeros(char_emb_dim)
             None
         elif self.asc:
