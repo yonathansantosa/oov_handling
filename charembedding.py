@@ -131,7 +131,7 @@ class Char_embedding:
             char_data = []
             for word in sentence:
                 if word == '<pad>':
-                    c_idx = torch.LongTensor([self.char2idx['<pad>']] * self.char_max_len)
+                    c_idx = torch.LongTensor([self.char2idx['<pad>']] * 2)
                 else:
                     c = list(word)
                     c = ['<sow>'] + c +['<eow>']
