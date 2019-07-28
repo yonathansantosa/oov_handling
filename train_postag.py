@@ -232,7 +232,7 @@ else:
         idxs_len = torch.LongTensor([len(data) for data in idxs])
         generated_embeddings = model.forward((idxs, idxs_len)).detach()
     else: 
-        idxs = nn.utils.rnn.pad_sequence(idxs, batch_first=True)
+        # idxs = nn.utils.rnn.pad_sequence(idxs, batch_first=True)
         idxs = idxs.unsqueeze(1)
         inputs = Variable(idxs).to(device) # (batch x channel x seq_len)
         generated_embeddings = model.forward(inputs).detach()                 
