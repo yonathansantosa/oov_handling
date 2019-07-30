@@ -272,7 +272,7 @@ postagger = Postagger_adaptive(seq_len, emb_dim, 20, len(dataset.tagset)).to(dev
 if args.load:
     postagger.load_state_dict(torch.load('%s/postag.pth' % (saved_postag_path)))
     
-if not args.freeze:
+if not args.freeze and not args.oov_random:
     optimizer = optim.SGD(list(postagger.parameters()) + list(model.parameters()), lr=learning_rate, momentum=momentum, nesterov=args.nesterov)
 else:
     optimizer = optim.SGD(postagger.parameters(), lr=learning_rate, momentum=momentum, nesterov=args.nesterov)
@@ -292,7 +292,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     if not args.freeze: model.train()
     for it, (X, y) in enumerate(train_loader):
         postagger.zero_grad()
-        if args.freeze:
+        if args.freeze or args.oov_random:
             inputs = X.to(device)
             embeddings = Variable(word_embedding.word_embedding(inputs), requires_grad=True)
         else:
@@ -353,7 +353,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     validation_loss = 0.
     accuracy = 0.
     for it, (X, y) in enumerate(validation_loader):
-        if args.freeze:
+        if args.freeze or args.oov_random:
             inputs = Variable(X).to(device)
             embeddings = word_embedding.word_embedding(inputs)
         else:
@@ -417,7 +417,7 @@ model.eval()
 
 accuracy = 0.
 for it, (X, y) in enumerate(validation_loader):
-    if args.freeze:
+    if args.freeze or args.oov_random:
         inputs = Variable(X).to(device)
         embeddings = word_embedding.word_embedding(inputs)
     else:
