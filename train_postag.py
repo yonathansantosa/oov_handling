@@ -126,7 +126,7 @@ char_embed = Char_embedding(char_emb_dim, char_max_len, asc=args.asc, random=Tru
 
 #* Initializing model
 word_embedding = Word_embedding(lang=args.lang, embedding=args.embedding)
-if not args.oov_random: word_embedding.update_weight('%s/trained_embedding_%s.txt' % (saved_model_path, args.model))
+# if not args.oov_random: word_embedding.update_weight('%s/trained_embedding_%s.txt' % (saved_model_path, args.model))
 emb_dim = word_embedding.emb_dim
 
 if args.model == 'lstm':
