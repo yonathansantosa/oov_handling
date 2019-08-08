@@ -86,7 +86,7 @@ class Char_embedding:
             c = ['<sow>'] + c +['<eow>']
             c_idx = [self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c]
             if model_name != 'lstm':
-                c_idx = [self.char2idx['<pad>']] * 7 + c_idx + [self.char2idx['<pad>']] * 7
+                c_idx = c_idx + [self.char2idx['<pad>']] * 7
             # if len(c_idx) < 7 and model_name != 'lstm':
             #     c_idx += [self.char2idx['<pad>']] * 7
             char_data += [torch.LongTensor(c_idx)]
@@ -137,7 +137,7 @@ class Char_embedding:
                     c = ['<sow>'] + c +['<eow>']
                     c_idx = [self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c]
                     if model_name != 'lstm':
-                        c_idx = [self.char2idx['<pad>']] * 7 + c_idx + [self.char2idx['<pad>']] * 7
+                        c_idx = c_idx + [self.char2idx['<pad>']] * 7
                 char_data += [torch.LongTensor(c_idx)]
             sents_data += char_data
 
@@ -175,7 +175,7 @@ class Char_embedding:
             c = ['<sow>'] + c +['<eow>']
             char_data = [self.char2idx[x] if x in self.char2idx else self.char2idx['<unk>'] for x in c]
             if model_name != 'lstm':
-                char_data = [self.char2idx['<pad>']] * 7 + char_data + [self.char2idx['<pad>']] * 7
+                char_data = char_data + [self.char2idx['<pad>']] * 7
             # char_data += [torch.LongTensor(c_idx)]
         else:
             char_data = [self.char2idx['<pad>']] * 7
