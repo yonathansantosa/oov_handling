@@ -54,6 +54,16 @@ class mimick_cnn(nn.Module):
             nn.Hardtanh(min_val=-3.0, max_val=3.0),
         )
 
+        self.log_sigma = nn.Sequential(
+            nn.Linear(num_feature*6, emb_dim),
+            nn.Tanh()
+        )
+
+        self.mu = nn.Sequential(
+            nn.Linear(num_feature*6, emb_dim),
+            nn.Tanh()
+        )
+
         self.mlp2 = nn.Sequential(
             nn.Linear(emb_dim, emb_dim),
             nn.Hardtanh(min_val=-3.0, max_val=3.0),
@@ -88,8 +98,14 @@ class mimick_cnn(nn.Module):
         maxpoolcat = torch.cat([x2_max, x3_max, x4_max, x5_max, x6_max, x7_max], dim=1)
 
         out_cnn = self.mlp1(maxpoolcat)
+
+        mu = self.mu(maxpoolcat)
+        log_sigma = self.log_sigma(maxpoolcat)
+        eps = torch.normal(mean=torch.zeros(mu.size(), dtype=torch.float), std=torch.ones(mu.size(), dtype=torch.float)).to(x.device)
         
-        out = self.t(out_cnn) * self.mlp2(out_cnn) + (1 - self.t(out_cnn)) * out_cnn
+        z = mu + torch.exp(log_sigma/2) * eps
+
+        out = self.t(out_cnn) * z + (1 - self.t(out_cnn)) * out_cnn
 
         return out
 
