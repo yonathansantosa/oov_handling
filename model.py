@@ -99,13 +99,13 @@ class mimick_cnn(nn.Module):
 
         out_cnn = self.mlp1(maxpoolcat)
 
-        mu = self.mu(maxpoolcat)
-        log_sigma = self.log_sigma(maxpoolcat)
-        eps = torch.normal(mean=torch.zeros(mu.size(), dtype=torch.float), std=torch.ones(mu.size(), dtype=torch.float)).to(x.device)
+        # mu = self.mu(maxpoolcat)
+        # log_sigma = self.log_sigma(maxpoolcat)
+        # eps = torch.normal(mean=torch.zeros(mu.size(), dtype=torch.float), std=torch.ones(mu.size(), dtype=torch.float)).to(x.device)
         
-        z = mu + torch.exp(log_sigma/2) * eps
+        # z = mu + torch.exp(log_sigma/2) * eps
 
-        out = self.t(out_cnn) * z + (1 - self.t(out_cnn)) * out_cnn
+        out = self.t(out_cnn) * self.mlp2(out_cnn) + (1 - self.t(out_cnn)) * out_cnn
 
         return out
 
