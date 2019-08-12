@@ -267,8 +267,8 @@ elif not os.path.exists(saved_model_path):
         
 word_embedding = dataset.embedding_vectors.to(device)
 optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum, nesterov=args.nesterov)
-# criterion = nn.MSELoss()
-criterion = LogCoshLoss()
+criterion = nn.MSELoss()
+# criterion = LogCoshLoss()
 step = 0
 
 # *Training

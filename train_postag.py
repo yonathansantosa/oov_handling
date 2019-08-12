@@ -117,6 +117,7 @@ weight_decay = float(args.weight_decay)
 momentum = float(args.momentum)
 multiplier = float(args.multiplier)
 classif = int(args.classif)
+dropout = float(args.dropout)
 #endregion
 
 #region model and embedding init
@@ -148,7 +149,8 @@ elif args.model == 'cnn':
             char_emb_dim=char_embed.char_emb_dim, 
             emb_dim=emb_dim,
             num_feature=int(args.num_feature),
-            random=False, asc=args.asc, features=features)
+            random=False, asc=args.asc, features=features,
+            dropout=dropout)
     else:
         model = mimick_cnn(
             embedding=char_embed.embed,
@@ -156,7 +158,8 @@ elif args.model == 'cnn':
             char_emb_dim=char_embed.char_emb_dim, 
             emb_dim=emb_dim,
             num_feature=int(args.num_feature),
-            random=False, asc=args.asc)
+            random=False, asc=args.asc,
+            dropout=dropout)
 elif args.model == 'cnn3':
     model = mimick_cnn3(
         embedding=char_embed.embed,
