@@ -51,6 +51,14 @@ def cosine_similarity(tensor1, tensor2, neighbor=5):
     d = d[:, :neighbor]
     return d, n
 
+class LogCoshLoss(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, y_t, y_prime_t):
+        ey_t = y_t - y_prime_t
+        return torch.mean(torch.log(torch.cosh(ey_t + 1e-12)))
+
 def init_weights(m):
     if type(m) == nn.Linear or type(m) == nn.Conv2d:
         m.weight.data.fill_(0.01)
@@ -259,7 +267,8 @@ elif not os.path.exists(saved_model_path):
         
 word_embedding = dataset.embedding_vectors.to(device)
 optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum, nesterov=args.nesterov)
-criterion = nn.MSELoss()
+# criterion = nn.MSELoss()
+criterion = LogCoshLoss()
 step = 0
 
 # *Training
