@@ -51,7 +51,7 @@ class mimick_cnn(nn.Module):
         self.features[np.array(features)[:]-2] = 1
         self.mlp1 = nn.Sequential(
             nn.Linear(num_feature*6, emb_dim),
-            nn.Tanh(min_val=-5.0, max_val=5.0),
+            nn.Tanh(),
         )
 
         self.log_sigma = nn.Sequential(
@@ -66,7 +66,7 @@ class mimick_cnn(nn.Module):
 
         self.mlp2 = nn.Sequential(
             nn.Linear(emb_dim, emb_dim),
-            nn.Tanh(min_val=-5.0, max_val=5.0),
+            nn.Tanh(),
         )
 
         self.t = nn.Sequential(
@@ -107,7 +107,7 @@ class mimick_cnn(nn.Module):
 
         out = self.t(out_cnn) * self.mlp2(out_cnn) + (1 - self.t(out_cnn)) * out_cnn
 
-        return out
+        return out*5
 
 class mimick_cnn2(nn.Module):
     def __init__(self, embedding,  char_max_len=15, char_emb_dim=300, emb_dim=300, num_feature=100, random=False, asc=False):
