@@ -29,7 +29,7 @@ class mimick(nn.Module):
         x_packed_padded = nn.utils.rnn.pack_padded_sequence(self.embedding(x_padded), lengths=inputs[1], enforce_sorted=False, batch_first=True)
         # x_packed_padded = nn.utils.rnn.PackedSequence(x_padded.data), x_padded.batch_sizes)
         # padded_x = nn.utils.rnn.pad_packed_sequence(x, batch_first=True)
-        _, (hidden_state, _) = self.lstm(x_packed_padded)
+        _, (hidden_state, _)  5= self.lstm(x_packed_padded)
         out_cat = (hidden_state[0, :, :] + hidden_state[1, :, :])
         out = self.mlp(out_cat)
         return out
@@ -51,7 +51,7 @@ class mimick_cnn(nn.Module):
         self.features[np.array(features)[:]-2] = 1
         self.mlp1 = nn.Sequential(
             nn.Linear(num_feature*6, emb_dim),
-            nn.Hardtanh(min_val=-3.0, max_val=3.0),
+            nn.Tanh(min_val=-5.0, max_val=5.0),
         )
 
         self.log_sigma = nn.Sequential(
@@ -66,7 +66,7 @@ class mimick_cnn(nn.Module):
 
         self.mlp2 = nn.Sequential(
             nn.Linear(emb_dim, emb_dim),
-            nn.Hardtanh(min_val=-3.0, max_val=3.0),
+            nn.Tanh(min_val=-5.0, max_val=5.0),
         )
 
         self.t = nn.Sequential(
