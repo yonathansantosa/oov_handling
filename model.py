@@ -41,12 +41,12 @@ class mimick_cnn(nn.Module):
         self.embedding.weight.data.copy_(embedding.weight.data)
         self.dropout = nn.Dropout(dropout)
         self.num_feature = num_feature
-        self.conv2 = nn.Conv2d(1, num_feature, (2, char_emb_dim), bias=False)
-        self.conv3 = nn.Conv2d(1, num_feature, (3, char_emb_dim), bias=False)
-        self.conv4 = nn.Conv2d(1, num_feature, (4, char_emb_dim), bias=False)
-        self.conv5 = nn.Conv2d(1, num_feature, (5, char_emb_dim), bias=False)
-        self.conv6 = nn.Conv2d(1, num_feature, (6, char_emb_dim), bias=False)
-        self.conv7 = nn.Conv2d(1, num_feature, (7, char_emb_dim), bias=False)
+        self.conv2 = nn.Conv2d(1, num_feature, (2, self.embedding.embedding_dim), bias=False)
+        self.conv3 = nn.Conv2d(1, num_feature, (3, self.embedding.embedding_dim), bias=False)
+        self.conv4 = nn.Conv2d(1, num_feature, (4, self.embedding.embedding_dim), bias=False)
+        self.conv5 = nn.Conv2d(1, num_feature, (5, self.embedding.embedding_dim), bias=False)
+        self.conv6 = nn.Conv2d(1, num_feature, (6, self.embedding.embedding_dim), bias=False)
+        self.conv7 = nn.Conv2d(1, num_feature, (7, self.embedding.embedding_dim), bias=False)
         self.features = np.zeros(6)
         self.features[np.array(features)[:]-2] = 1
         self.mlp1 = nn.Sequential(
