@@ -50,7 +50,7 @@ class mimick_cnn(nn.Module):
         self.features = np.zeros(6)
         self.features[np.array(features)[:]-2] = 1
         self.mlp1 = nn.Sequential(
-            nn.Linear(num_feature*6, emb_dim),
+            nn.Linear(num_feature*6, 200),
             nn.Hardtanh(-3, 3),
         )
 
@@ -65,8 +65,7 @@ class mimick_cnn(nn.Module):
         )
 
         self.mlp2 = nn.Sequential(
-            nn.Linear(emb_dim, emb_dim),
-            nn.Hardtanh(-3, 3),
+            nn.Linear(200, emb_dim),
         )
 
         self.t = nn.Sequential(
