@@ -346,8 +346,8 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     if not args.local:
         copy_tree(logger_dir, cloud_dir+logger_dir)
         
-    torch.save(postagger.state_dict(), '%s/postag.pth' % (saved_postag_path))
-    torch.save(model.state_dict(), '%s/%s.pth' % (saved_postag_path, args.model))
+    # torch.save(postagger.state_dict(), '%s/postag.pth' % (saved_postag_path))
+    # torch.save(model.state_dict(), '%s/%s.pth' % (saved_postag_path, args.model))
     if not args.quiet: tqdm.write('%d | %.4f ' % (epoch, loss_item))
 
     #* Validation
