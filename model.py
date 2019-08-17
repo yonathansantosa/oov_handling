@@ -41,6 +41,7 @@ class mimick_cnn(nn.Module):
         self.embedding.weight.data.copy_(embedding.weight.data)
         self.dropout = nn.Dropout(dropout)
         self.num_feature = num_feature
+
         self.conv2 = nn.Conv2d(1, num_feature, (2, self.embedding.embedding_dim), bias=False)
         self.conv3 = nn.Conv2d(1, num_feature, (3, self.embedding.embedding_dim), bias=False)
         self.conv4 = nn.Conv2d(1, num_feature, (4, self.embedding.embedding_dim), bias=False)
@@ -49,10 +50,15 @@ class mimick_cnn(nn.Module):
         self.conv7 = nn.Conv2d(1, num_feature, (7, self.embedding.embedding_dim), bias=False)
         self.features = np.zeros(6)
         self.features[np.array(features)[:]-2] = 1
+
+        self.bn1 = nn.BatchNorm1d(self.num_feature*6)
+
         self.mlp1 = nn.Sequential(
             nn.Linear(num_feature*6, 200),
-            nn.Hardtanh(-3, 3),
+            nn.Tanh(),
         )
+
+        self.bn2 = nn.BatchNorm1d(200)
 
         self.log_sigma = nn.Sequential(
             nn.Linear(num_feature*6, emb_dim),
@@ -66,6 +72,7 @@ class mimick_cnn(nn.Module):
 
         self.mlp2 = nn.Sequential(
             nn.Linear(200, emb_dim),
+            nn.Tanh()
         )
 
         self.t = nn.Sequential(
@@ -95,9 +102,10 @@ class mimick_cnn(nn.Module):
 
         
         maxpoolcat = torch.cat([x2_max, x3_max, x4_max, x5_max, x6_max, x7_max], dim=1)
-
-        out_cnn = self.mlp1(maxpoolcat) 
-
+        norm_maxpoolcat = self.bn1(maxpoolcat)
+        out_cnn = self.mlp1(norm_maxpoolcat) 
+        norm_out_cnn = self.bn2(out_cnn)
+        out = self.mlp2(norm_out_cnn)
         # mu = self.mu(maxpoolcat)
         # log_sigma = self.log_sigma(maxpoolcat)
         # eps = torch.normal(mean=torch.zeros(mu.size(), dtype=torch.float), std=torch.ones(mu.size(), dtype=torch.float)).to(x.device)
@@ -106,7 +114,7 @@ class mimick_cnn(nn.Module):
 
         # out = self.t(out_cnn) * self.mlp2(out_cnn) + (1 - self.t(out_cnn)) * out_cnn
 
-        return self.mlp2(out_cnn)
+        return out
 
 class mimick_cnn2(nn.Module):
     def __init__(self, embedding,  char_max_len=15, char_emb_dim=300, emb_dim=300, num_feature=100, random=False, asc=False):
