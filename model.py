@@ -42,12 +42,30 @@ class mimick_cnn(nn.Module):
         self.dropout = nn.Dropout(dropout)
         self.num_feature = num_feature
 
-        self.conv2 = nn.Conv2d(1, num_feature, (2, self.embedding.embedding_dim), bias=False)
-        self.conv3 = nn.Conv2d(1, num_feature, (3, self.embedding.embedding_dim), bias=False)
-        self.conv4 = nn.Conv2d(1, num_feature, (4, self.embedding.embedding_dim), bias=False)
-        self.conv5 = nn.Conv2d(1, num_feature, (5, self.embedding.embedding_dim), bias=False)
-        self.conv6 = nn.Conv2d(1, num_feature, (6, self.embedding.embedding_dim), bias=False)
-        self.conv7 = nn.Conv2d(1, num_feature, (7, self.embedding.embedding_dim), bias=False)
+        self.conv2 = nn.Sequential(
+            nn.Conv2d(1, num_feature, (2, self.embedding.embedding_dim), bias=False),
+            nn.ReLU()
+        )
+        self.conv3 = nn.Sequential(
+            nn.Conv2d(1, num_feature, (3, self.embedding.embedding_dim), bias=False),
+            nn.ReLU()
+        )
+        self.conv4 = nn.Sequential(
+            nn.Conv2d(1, num_feature, (4, self.embedding.embedding_dim), bias=False),
+            nn.ReLU()
+        )
+        self.conv5 = nn.Sequential(
+            nn.Conv2d(1, num_feature, (5, self.embedding.embedding_dim), bias=False),
+            nn.ReLU()
+        )
+        self.conv6 = nn.Sequential(
+            nn.Conv2d(1, num_feature, (6, self.embedding.embedding_dim), bias=False),
+            nn.ReLU()
+        )
+        self.conv7 = nn.Sequential(
+            nn.Conv2d(1, num_feature, (7, self.embedding.embedding_dim), bias=False),
+            nn.ReLU()
+        )
         self.features = np.zeros(6)
         self.features[np.array(features)[:]-2] = 1
 
@@ -84,12 +102,12 @@ class mimick_cnn(nn.Module):
         x = self.dropout(self.embedding(inputs).float())
         sizes = torch.Size((x.shape[0], self.num_feature, x.shape[3]))
         zeroes = torch.zeros(sizes, dtype=torch.float, device=x.device)
-        x2 = self.conv2(x).relu().squeeze(-1) if self.features[0] != 0 else zeroes
-        x3 = self.conv3(x).relu().squeeze(-1) if self.features[1] != 0 else zeroes
-        x4 = self.conv4(x).relu().squeeze(-1) if self.features[2] != 0 else zeroes
-        x5 = self.conv5(x).relu().squeeze(-1) if self.features[3] != 0 else zeroes
-        x6 = self.conv6(x).relu().squeeze(-1) if self.features[4] != 0 else zeroes
-        x7 = self.conv7(x).relu().squeeze(-1) if self.features[5] != 0 else zeroes
+        x2 = self.conv2(x).squeeze(-1) if self.features[0] != 0 else zeroes
+        x3 = self.conv3(x).squeeze(-1) if self.features[1] != 0 else zeroes
+        x4 = self.conv4(x).squeeze(-1) if self.features[2] != 0 else zeroes
+        x5 = self.conv5(x).squeeze(-1) if self.features[3] != 0 else zeroes
+        x6 = self.conv6(x).squeeze(-1) if self.features[4] != 0 else zeroes
+        x7 = self.conv7(x).squeeze(-1) if self.features[5] != 0 else zeroes
 
 
         x2_max = F.max_pool1d(x2, x2.shape[2]).squeeze(-1)
