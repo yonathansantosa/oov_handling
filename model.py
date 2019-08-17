@@ -71,8 +71,7 @@ class mimick_cnn(nn.Module):
         )
 
         self.mlp2 = nn.Sequential(
-            nn.Linear(200, emb_dim),
-            nn.Tanh()
+            nn.Linear(200, emb_dim)
         )
 
         self.t = nn.Sequential(
