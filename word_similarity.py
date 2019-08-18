@@ -180,10 +180,7 @@ if args.load:
         model = None
 
     model.to(device)
-    if device == 'cuda':
-        model.load_state_dict(torch.load(f'{saved_model_path}/{args.model}.pth'))
-    else:
-        model.load_state_dict(torch.load(f'{saved_model_path}/{args.model}.pth'), map_location=device)
+    model.load_state_dict(torch.load(f'{saved_model_path}/{args.model}.pth'))
     model.eval()
 
 
