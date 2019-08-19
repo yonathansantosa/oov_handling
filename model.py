@@ -17,7 +17,7 @@ class mimick(nn.Module):
         self.hidden_size = hidden_size
         self.lstm = nn.LSTM(char_emb_dim, self.hidden_size, 1, bidirectional=True, batch_first=True)
         self.mlp = nn.Sequential(
-            nn.Linear(self.hidden_size, 300),
+            nn.Linear(self.hidden_size*2, 300),
             nn.ReLU(),
             nn.Linear(300, emb_dim),
             nn.Hardtanh(min_val=-3.0, max_val=3.0),
@@ -30,7 +30,7 @@ class mimick(nn.Module):
         # x_packed_padded = nn.utils.rnn.PackedSequence(x_padded.data), x_padded.batch_sizes)
         # padded_x = nn.utils.rnn.pad_packed_sequence(x, batch_first=True)
         _, (hidden_state, _) = self.lstm(x_packed_padded)
-        out_cat = (hidden_state[0, :, :] + hidden_state[1, :, :])
+        out_cat = torch.cat((hidden_state[0, :, :], hidden_state[1, :, :]), 1)
         out = self.mlp(out_cat)
         return out
 
