@@ -451,7 +451,7 @@ for it, (X, y) in enumerate(validation_loader):
     # output_tag = postagger.predict(output.view(X.shape[0], seq_len))
     output_tag = output.view(X.shape[0], seq_len)
     accuracy += float((output_tag == target).sum())
-    if it <= 3:
+    if it <= 3 and not args.quiet:
         tag = output_tag[0]
         for i in range(len(X[0])):
             word_idx = X[0][i].cpu().numpy()
