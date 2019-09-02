@@ -59,8 +59,8 @@ class Word_embedding:
     def idx2word(self, idx):
         return self.itos[int(idx)]
 
-    def idxs2sentence(self, idxs):
-        return ' '.join([self.itos[int(i)] for i in idxs])
+    def idxs2sentence(self, idxs, separator=' '):
+        return separator.join([self.itos[int(i)] for i in idxs])
 
     def sentence2idxs(self, sentence):
         word = sentence.split()
