@@ -94,7 +94,7 @@ class mimick_cnn(nn.Module):
 
         self.t = nn.Sequential(
             nn.Linear(emb_dim, emb_dim),
-            nn.Sigmoid()
+            nn.Tanh()
         )
 
     def forward(self, inputs):
@@ -119,17 +119,14 @@ class mimick_cnn(nn.Module):
 
         
         maxpoolcat = torch.cat([x2_max, x3_max, x4_max, x5_max, x6_max, x7_max], dim=1)
-        norm_maxpoolcat = self.bn1(maxpoolcat)
-        out_cnn = self.mlp1(norm_maxpoolcat) 
-        norm_out_cnn = self.bn2(out_cnn)
-        out = self.mlp2(norm_out_cnn)
-        # mu = self.mu(maxpoolcat)
-        # log_sigma = self.log_sigma(maxpoolcat)
-        # eps = torch.normal(mean=torch.zeros(mu.size(), dtype=torch.float), std=torch.ones(mu.size(), dtype=torch.float)).to(x.device)
         
-        # z = mu + torch.exp(log_sigma/2) * eps
+        # norm_maxpoolcat = self.bn1(maxpoolcat)
+        # out_cnn = self.mlp1(norm_maxpoolcat) 
+        # norm_out_cnn = self.bn2(out_cnn)
+        # out = self.mlp2(norm_out_cnn)
 
-        # out = self.t(out_cnn) * self.mlp2(out_cnn) + (1 - self.t(out_cnn)) * out_cnn
+        out_cnn = self.mlp1(maxpoolcat)
+        out = self.t(out_cnn) * self.mlp2(out_cnn) + (1 - self.t(out_cnn)) * out_cnn
 
         return out
 
