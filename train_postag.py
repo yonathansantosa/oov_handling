@@ -80,7 +80,7 @@ args = parser.parse_args()
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 cloud_dir = '/content/gdrive/My Drive/'
-saved_model_path = 'train_dropout/trained_model_%s_%s_%s_%s' % (args.lang, args.model, args.embedding, args.trained_seed)
+saved_model_path = f'train_dropout/trained_model_{args.lang}_{args.model}_{args.embedding}_{args.trained_seed}_{args.num_feature}'
 saved_postag_path = 'train_dropout/trained_model_%s_%s_%s_postag' % (args.lang, args.model, args.embedding)
 logger_dir = '%s/logs/run%s/' % (saved_postag_path, args.run)
 logger_val_dir = '%s/logs/val-run%s/' % (saved_postag_path, args.run)

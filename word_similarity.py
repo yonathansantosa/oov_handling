@@ -105,7 +105,7 @@ parser.add_argument('--cnngrams', nargs='+')
 parser.add_argument('--trained_seed', default=64)
 
 args = parser.parse_args()
-saved_model_path = f'train_dropout/trained_model_{args.lang}_{args.model}_{args.embedding}_{args.trained_seed}'
+saved_model_path = f'train_dropout/trained_model_{args.lang}_{args.model}_{args.embedding}_{args.trained_seed}_{args.num_feature}'
 cloud_dir = '/content/gdrive/My Drive/'
 
 if not args.local:
