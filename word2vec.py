@@ -52,6 +52,7 @@ with gzip.open(FILE_NAME, 'rb') as f, open(STOI, 'w', encoding='utf-8') as stoi,
     header = ""
     while c != b"\n":
         c = f.read(1)
+        print(c)
         header += c.decode('utf8')
 
     total_num_vectors, vector_len = (int(x) for x in header.split())
