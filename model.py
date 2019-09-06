@@ -72,7 +72,7 @@ class mimick_cnn(nn.Module):
         self.bn1 = nn.BatchNorm1d(self.num_feature*6)
 
         self.mlp1 = nn.Sequential(
-            nn.Linear(num_feature*6, emb_dim),
+            nn.Linear(num_feature*6, 200),
             nn.Tanh(),
         )
 
@@ -89,7 +89,7 @@ class mimick_cnn(nn.Module):
         )
 
         self.mlp2 = nn.Sequential(
-            nn.Linear(emb_dim, emb_dim)
+            nn.Linear(200, emb_dim)
         )
 
         self.t = nn.Sequential(
