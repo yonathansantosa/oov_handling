@@ -120,13 +120,13 @@ class mimick_cnn(nn.Module):
         
         maxpoolcat = torch.cat([x2_max, x3_max, x4_max, x5_max, x6_max, x7_max], dim=1)
         
-        # norm_maxpoolcat = self.bn1(maxpoolcat)
-        # out_cnn = self.mlp1(norm_maxpoolcat) 
-        # norm_out_cnn = self.bn2(out_cnn)
-        # out = self.mlp2(norm_out_cnn)
+        norm_maxpoolcat = self.bn1(maxpoolcat)
+        out_cnn = self.mlp1(norm_maxpoolcat) 
+        norm_out_cnn = self.bn2(out_cnn)
+        out = self.mlp2(norm_out_cnn)
 
-        out_cnn = self.mlp1(maxpoolcat)
-        out = self.t(out_cnn) * self.mlp2(out_cnn) + (1 - self.t(out_cnn)) * out_cnn
+        # out_cnn = self.mlp1(maxpoolcat)
+        # out = self.t(out_cnn) * self.mlp2(out_cnn) + (1 - self.t(out_cnn)) * out_cnn
 
         return out
 
