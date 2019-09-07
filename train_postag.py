@@ -81,6 +81,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 cloud_dir = '/content/gdrive/My Drive/'
 saved_model_path = f'train_dropout/trained_model_{args.lang}_{args.model}_{args.embedding}_{args.trained_seed}_{args.num_feature}'
+if args.cnngrams != None: saved_model_path += '_' + ''.join(args.cnngrams)
 saved_postag_path = 'train_dropout/trained_model_%s_%s_%s_postag' % (args.lang, args.model, args.embedding)
 logger_dir = '%s/logs/run%s/' % (saved_postag_path, args.run)
 logger_val_dir = '%s/logs/val-run%s/' % (saved_postag_path, args.run)
@@ -192,7 +193,7 @@ dataset = Postag(word_embedding)
 #region creating vocab entries
 #* Creating PT data samplers and loaders:
 original_vocab_len = len(word_embedding)
-print('total word = %d' % len(word_embedding))
+if not args.quiet: print('total word = %d' % len(word_embedding))
 new_word = []
 oov = 0
 invocab = 0
@@ -222,8 +223,9 @@ for word in tagged_words:
     else:
         invocab += 1
 
-print('oov = %d' % oov)
-print('invocab = %d' % invocab)
+if not args.quiet: 
+    print('oov = %d' % oov)
+    print('invocab = %d' % invocab)
 
 if args.oov_random:
     new_word += [torch.normal(torch.zeros(emb_dim, dtype=torch.float), std=3.0, out=None)]
@@ -284,7 +286,7 @@ criterion = nn.NLLLoss()
 # postagger.apply(init_weights)
 step = 0
 
-print('before training')
+if not args.quiet: print('before training')
 
 #* Training
 for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(args.epoch)):
