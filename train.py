@@ -148,6 +148,7 @@ if run != 1:
 #* Folder naming
 cloud_dir = '/content/gdrive/My Drive/'
 saved_model_path = f'train_dropout/trained_model_{args.lang}_{args.model}_{args.embedding}_{args.seed}_{args.num_feature}'
+if args.cnngrams != None: saved_model_path += '_' + ''.join(args.cnngrams)
 logger_dir = f'{saved_model_path}/logs/run{args.run}/'
 logger_val_dir = f'{saved_model_path}/logs/val-{args.run}/'
 
@@ -207,7 +208,11 @@ validation_loader = DataLoader(dataset, batch_size=val_batch_size, sampler=valid
 
 #* Initializing model
 if args.model == 'lstm':
-    model = mimick(char_embed.embed, char_embed.char_emb_dim, dataset.emb_dim, int(args.num_feature))
+    model = mimick(
+        embedding = char_embed.embed, 
+        char_emb_dim = char_embed.char_emb_dim, 
+        emb_dim = dataset.emb_dim, 
+        hidden_size = int(args.num_feature))
 elif args.model == 'cnn2':
     model = mimick_cnn2(
         embedding=char_embed.embed,
