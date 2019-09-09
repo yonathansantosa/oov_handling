@@ -70,6 +70,7 @@ parser.add_argument('--seed', default=64)
 parser.add_argument('--trained_seed', default=64)
 parser.add_argument('--tagset', default='brown')
 parser.add_argument('--freeze', default=False, action='store_true')
+parser.add_argument('--train_embed', default=False, action='store_true')
 parser.add_argument('--cnngrams', nargs='+')
 
 args = parser.parse_args()
@@ -249,12 +250,12 @@ word_embedding.stoi['<pad>'] = len(word_embedding.stoi)
 word_embedding.itos += ['<pad>']
 #endregion
 word_embedding.word_embedding.weight.data = torch.cat((word_embedding.word_embedding.weight.data, new_word)).to(device)
-if args.oov_random or args.freeze: 
-    word_embedding.word_embedding.training = False
-    word_embedding.word_embedding.weight.requires_grad = False
-else:
-    word_embedding.word_embedding.training = False
-    word_embedding.word_embedding.weight.requires_grad = False
+# if args.oov_random or args.freeze: 
+#     word_embedding.word_embedding.training = False
+#     word_embedding.word_embedding.weight.requires_grad = False
+# else:
+word_embedding.word_embedding.training = args.train_embed
+word_embedding.word_embedding.weight.requires_grad = args.train_embed
 
 #region train val split and loader
 dataset_size = len(dataset)
