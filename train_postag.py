@@ -304,8 +304,8 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     for it, (X, y) in enumerate(train_loader):
         postagger.zero_grad()
         if args.freeze or args.oov_random:
-            inputs = X.to(device)
-            embeddings = Variable(word_embedding.word_embedding(inputs), requires_grad=True)
+            inputs = Variable(X).to(device)
+            embeddings = word_embedding.word_embedding(inputs)
         else:
             words = [word_embedding.idxs2words(x) for x in X]
             idxs = char_embed.char_sents_split(words, args.model)
