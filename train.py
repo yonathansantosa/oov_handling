@@ -148,7 +148,7 @@ if run != 1:
 #* Folder naming
 cloud_dir = '/content/gdrive/My Drive/'
 saved_model_path = f'train_dropout/trained_model_{args.lang}_{args.model}_{args.embedding}_{args.seed}_{args.num_feature}'
-if args.cnngrams != None: saved_model_path += '_' + ''.join(args.cnngrams)
+if args.cnngrams != None and args.model == 'cnn': saved_model_path += '_' + ''.join(args.cnngrams)
 logger_dir = f'{saved_model_path}/logs/run{args.run}/'
 logger_val_dir = f'{saved_model_path}/logs/val-{args.run}/'
 
@@ -160,9 +160,11 @@ logger_val = Logger(logger_val_dir)
 
 
 # *Device configuration
+torch.cuda.current_device()
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # device = 'cpu'
-
+# x = torch.tensor([1.,2.], device=device)
+# y = torch.tensor([1.,2.]).to(device)
 # *Parameters
 char_emb_dim = int(args.charembdim)
 char_max_len = int(args.charlen)

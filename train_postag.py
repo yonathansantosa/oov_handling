@@ -81,7 +81,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 cloud_dir = '/content/gdrive/My Drive/'
 saved_model_path = f'train_dropout/trained_model_{args.lang}_{args.model}_{args.embedding}_{args.trained_seed}_{args.num_feature}'
-if args.cnngrams != None: saved_model_path += '_' + ''.join(args.cnngrams)
+if args.cnngrams != None and args.model == 'cnn': saved_model_path += '_' + ''.join(args.cnngrams)
 saved_postag_path = 'train_dropout/trained_model_%s_%s_%s_postag' % (args.lang, args.model, args.embedding)
 logger_dir = '%s/logs/run%s/' % (saved_postag_path, args.run)
 logger_val_dir = '%s/logs/val-run%s/' % (saved_postag_path, args.run)
@@ -249,7 +249,12 @@ word_embedding.stoi['<pad>'] = len(word_embedding.stoi)
 word_embedding.itos += ['<pad>']
 #endregion
 word_embedding.word_embedding.weight.data = torch.cat((word_embedding.word_embedding.weight.data, new_word)).to(device)
-if args.oov_random or args.freeze: word_embedding.word_embedding.weight.requires_grad = True
+if args.oov_random or args.freeze: 
+    word_embedding.word_embedding.training = True
+    word_embedding.word_embedding.weight.requires_grad = True
+else:
+    word_embedding.word_embedding.training = False
+    word_embedding.word_embedding.weight.requires_grad = False
 
 #region train val split and loader
 dataset_size = len(dataset)
