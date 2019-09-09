@@ -249,7 +249,7 @@ word_embedding.stoi['<pad>'] = len(word_embedding.stoi)
 word_embedding.itos += ['<pad>']
 #endregion
 word_embedding.word_embedding.weight.data = torch.cat((word_embedding.word_embedding.weight.data, new_word)).to(device)
-if args.oov_random: word_embedding.word_embedding.weight.requires_grad = True
+if args.oov_random or args.freeze: word_embedding.word_embedding.weight.requires_grad = True
 
 #region train val split and loader
 dataset_size = len(dataset)
