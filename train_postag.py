@@ -254,8 +254,8 @@ word_embedding.word_embedding.weight.data = torch.cat((word_embedding.word_embed
 #     word_embedding.word_embedding.training = False
 #     word_embedding.word_embedding.weight.requires_grad = False
 # else:
-word_embedding.word_embedding.training = args.train_embed
-word_embedding.word_embedding.weight.requires_grad = args.train_embed
+# word_embedding.word_embedding.training = args.train_embed
+# word_embedding.word_embedding.weight.requires_grad = args.train_embed
 
 #region train val split and loader
 dataset_size = len(dataset)
@@ -301,6 +301,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     postagger.train()
     
     if not args.freeze: model.train()
+    if args.train_embed: word_embedding.word_embedding.train()
     for it, (X, y) in enumerate(train_loader):
         postagger.zero_grad()
         if args.freeze or args.oov_random:
@@ -361,6 +362,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     #* Validation
     postagger.eval()
     model.eval()
+    word_embedding.word_embedding.eval()
     validation_loss = 0.
     accuracy = 0.
     for it, (X, y) in enumerate(validation_loader):

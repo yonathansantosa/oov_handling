@@ -7,7 +7,7 @@ from polyglot.mapping import Embedding
 from torchtext.vocab import Vectors, GloVe
 
 class Word_embedding:
-    def __init__(self, emb_dim=300, lang='en', embedding='polyglot'):
+    def __init__(self, emb_dim=300, lang='en', embedding='polyglot', freeze=True):
         '''
         Initializing word embedding
         Parameter:
@@ -36,7 +36,7 @@ class Word_embedding:
             self.embedding_vectors = dict2vec.vectors
             self.stoi = dict2vec.stoi
             self.itos = dict2vec.itos
-        self.word_embedding = nn.Embedding.from_pretrained(self.embedding_vectors, freeze=True, sparse=True)
+        self.word_embedding = nn.Embedding.from_pretrained(self.embedding_vectors, freeze=freeze, sparse=True)
         self.emb_dim = self.embedding_vectors.size(1)
         
     def __getitem__(self, index):
@@ -45,10 +45,10 @@ class Word_embedding:
     def __len__(self):
         return len(self.itos)
     
-    def update_weight(self, weight):
+    def update_weight(self, weight, freeze=True):
         new_emb = Vectors(weight)
         self.embedding_vectors = new_emb.vectors
-        self.word_embedding = nn.Embedding.from_pretrained(self.embedding_vectors, freeze=True, sparse=True)
+        self.word_embedding = nn.Embedding.from_pretrained(self.embedding_vectors, freeze=freeze, sparse=True)
         self.emb_dim = self.embedding_vectors.size(1)
         self.stoi = new_emb.stoi
         self.itos = new_emb.itos
