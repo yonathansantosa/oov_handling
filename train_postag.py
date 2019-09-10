@@ -286,7 +286,9 @@ if args.load:
     postagger.load_state_dict(torch.load('%s/postag.pth' % (saved_postag_path)))
     
 if not args.freeze and not args.oov_random:
-    optimizer = optim.SGD(list(postagger.parameters()) + list(model.parameters()), lr=learning_rate, momentum=momentum, nesterov=args.nesterov)
+    params = list(postagger.parameters()) + list(model.parameters())
+    if args.train_embed: params += list(word_embedding.word_embedding.parameters())
+    optimizer = optim.SGD(params, lr=learning_rate, momentum=momentum, nesterov=args.nesterov)
 else:
     optimizer = optim.SGD(list(postagger.parameters()) + list(word_embedding.word_embedding.parameters()), lr=learning_rate, momentum=momentum, nesterov=args.nesterov)
 criterion = nn.NLLLoss()
@@ -332,7 +334,8 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
                 generated_embeddings = model.forward(inputs).view(X.size(0),-1,emb_dim)
             
             mask = (X < original_vocab_len).type(torch.FloatTensor).unsqueeze(2).to(device)
-            pretrained_embeddings = word_embedding.word_embedding(Variable(X).to(device))
+            words = Variable(X).to(device)
+            pretrained_embeddings = word_embedding.word_embedding(words)
             embeddings = mask * pretrained_embeddings + (1-mask) * generated_embeddings
 
         target = Variable(y).to(device)
