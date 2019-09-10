@@ -128,7 +128,7 @@ char_embed = Char_embedding(char_emb_dim, char_max_len, asc=args.asc, random=Tru
 # char_embed.embed.eval()
 
 #* Initializing model
-word_embedding = Word_embedding(lang=args.lang, embedding=args.embedding)
+word_embedding = Word_embedding(lang=args.lang, embedding=args.embedding, freeze=args.train_embed, sparse=False)
 # if not args.oov_random: word_embedding.update_weight('%s/trained_embedding_%s.txt' % (saved_model_path, args.model))
 emb_dim = word_embedding.emb_dim
 
@@ -219,7 +219,7 @@ for word in tagged_words:
                 inputs = Variable(idxs).to(device) # (batch x channel x seq_len)
                 generated_embeddings = model.forward(inputs).detach()
             # output = model.forward(inputs).detach()
-            new_word += [generated_embeddings.cpu()]
+            new_word += [generated_embeddings]
         oov += 1
     else:
         invocab += 1
@@ -242,14 +242,16 @@ else:
         idxs = idxs.unsqueeze(1)
         inputs = Variable(idxs).to(device) # (batch x channel x seq_len)
         generated_embeddings = model.forward(inputs).detach()                 
-    new_word += [generated_embeddings.cpu()]
+    new_word += [generated_embeddings]
     
 new_word = torch.stack(new_word).squeeze()
         
 word_embedding.stoi['<pad>'] = len(word_embedding.stoi)
 word_embedding.itos += ['<pad>']
 #endregion
-word_embedding.word_embedding.weight.data = torch.cat((word_embedding.word_embedding.weight.data, new_word)).to(device)
+with torch.no_grad():
+    word_embedding.word_embedding.weight.set_(torch.cat((word_embedding.word_embedding.weight.data, new_word)))
+# word_embedding.word_embedding.to(device)
 # if args.oov_random or args.freeze: 
 #     word_embedding.word_embedding.training = False
 #     word_embedding.word_embedding.weight.requires_grad = False
@@ -286,13 +288,13 @@ if args.load:
 if not args.freeze and not args.oov_random:
     optimizer = optim.SGD(list(postagger.parameters()) + list(model.parameters()), lr=learning_rate, momentum=momentum, nesterov=args.nesterov)
 else:
-    optimizer = optim.SGD(postagger.parameters(), lr=learning_rate, momentum=momentum, nesterov=args.nesterov)
+    optimizer = optim.SGD(list(postagger.parameters()) + list(word_embedding.word_embedding.parameters()), lr=learning_rate, momentum=momentum, nesterov=args.nesterov)
 criterion = nn.NLLLoss()
 
 # postagger.apply(init_weights)
 step = 0
-
-if not args.quiet: print('before training')
+# if args.train_embed: 
+#     word_embedding.word_embedding.weight.requires_grad = True
 
 #* Training
 for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(args.epoch)):
