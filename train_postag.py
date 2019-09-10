@@ -204,9 +204,9 @@ for word in tagged_words:
         word_embedding.stoi[word] = len(word_embedding.stoi)
         word_embedding.itos += [word]
         if args.oov_random:
-            new_word += [torch.normal(torch.zeros(emb_dim, dtype=torch.float), std=3.0, out=None)]
+            new_word += [torch.normal(torch.zeros(emb_dim, dtype=torch.float, device=device), std=3.0, out=None)]
         elif not args.freeze:
-            new_word += [torch.zeros(emb_dim, dtype=torch.float)]
+            new_word += [torch.zeros(emb_dim, dtype=torch.float, device=device)]
         else:
             idxs = char_embed.word2idxs(word, args.model).unsqueeze(0).to(device).detach()
             if args.model == 'lstm':
@@ -229,9 +229,9 @@ if not args.quiet:
     print('invocab = %d' % invocab)
 
 if args.oov_random:
-    new_word += [torch.normal(torch.zeros(emb_dim, dtype=torch.float), std=3.0, out=None)]
+    new_word += [torch.normal(torch.zeros(emb_dim, dtype=torch.float, device=device), std=3.0, out=None)]
 elif not args.freeze:
-    new_word += [torch.zeros(emb_dim, dtype=torch.float)]
+    new_word += [torch.zeros(emb_dim, dtype=torch.float, device=device)]
 else:
     idxs = char_embed.word2idxs('<pad>').unsqueeze(0).to(device).detach()
     if args.model == 'lstm':
