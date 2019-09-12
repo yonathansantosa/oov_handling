@@ -188,7 +188,7 @@ dropout = float(args.dropout)
 
 #* Loading embedding
 char_embed = Char_embedding(char_emb_dim, char_max_len, asc=args.asc, random=True, device=device)
-dataset = Word_embedding(lang=args.lang, embedding=args.embedding)
+dataset = Word_embedding(lang=args.lang, embedding=args.embedding, device=torch.device('cpu'))
 emb_dim = dataset.emb_dim
 
 #* Creating dataset split
