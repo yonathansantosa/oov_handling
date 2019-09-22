@@ -241,6 +241,6 @@ for d_names in dataset_names:
     if args.save: f.close() 
 
     # score, idx = torch.sort(torch.cat(similarity), descending=True)
-    r, p = spearmanr(torch.cat(similarity).cpu().numpy(), np.array(dataset.scores))
+    r, p = spearmanr(torch.cat(similarity).detach().cpu().numpy(), np.array(dataset.scores))
     
     print(f'{d_names},{oov},{invocab},{r:.8f},{p:.8f}')
