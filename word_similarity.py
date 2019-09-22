@@ -106,7 +106,7 @@ parser.add_argument('--trained_seed', default=64)
 
 args = parser.parse_args()
 cloud_dir = '/content/gdrive/My Drive/'
-saved_model_path = f'train_dropout/trained_model_{args.lang}_{args.model}_{args.embedding}_{args.seed}_{args.num_feature}'
+saved_model_path = f'train_dropout/trained_model_{args.lang}_{args.model}_{args.embedding}_{args.trained_seed}_{args.num_feature}'
 if args.cnngrams != None and args.model == 'cnn': saved_model_path += '_' + ''.join(args.cnngrams)
 
 if not args.local:
