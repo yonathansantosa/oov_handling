@@ -105,8 +105,9 @@ parser.add_argument('--cnngrams', nargs='+')
 parser.add_argument('--trained_seed', default=64)
 
 args = parser.parse_args()
-saved_model_path = f'train_dropout/trained_model_{args.lang}_{args.model}_{args.embedding}_{args.trained_seed}_{args.num_feature}'
 cloud_dir = '/content/gdrive/My Drive/'
+saved_model_path = f'train_dropout/trained_model_{args.lang}_{args.model}_{args.embedding}_{args.seed}_{args.num_feature}'
+if args.cnngrams != None and args.model == 'cnn': saved_model_path += '_' + ''.join(args.cnngrams)
 
 if not args.local:
     saved_model_path = cloud_dir + saved_model_path
@@ -131,7 +132,11 @@ emb_dim = word_embedding.emb_dim
 #* Initializing model
 if args.load:
     if args.model == 'lstm':
-        model = mimick(char_embed.embed, char_embed.char_emb_dim, word_embedding.emb_dim, int(args.num_feature))
+        model = mimick(
+            char_embed.embed, 
+            char_embed.char_emb_dim, 
+            word_embedding.emb_dim, 
+            int(args.num_feature))
     elif args.model == 'cnn2':
         model = mimick_cnn2(
             embedding=char_embed.embed,
