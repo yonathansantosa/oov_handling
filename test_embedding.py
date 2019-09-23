@@ -75,8 +75,7 @@ parser.add_argument('--classif', default=200)
 parser.add_argument('--neighbor', default=5)
 parser.add_argument('--seed', default=128)
 parser.add_argument('--words', nargs='+')
-
-
+parser.add_argument('--cnngrams', nargs='+')
 
 args = parser.parse_args()
 cloud_dir = '/content/gdrive/My Drive/'
