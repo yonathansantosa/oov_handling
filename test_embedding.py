@@ -80,7 +80,8 @@ parser.add_argument('--words', nargs='+')
 
 args = parser.parse_args()
 cloud_dir = '/content/gdrive/My Drive/'
-saved_model_path = f'train_dropout/trained_model_{args.lang}_{args.model}_{args.embedding}_{args.seed}'
+saved_model_path = f'train_dropout/trained_model_{args.lang}_{args.model}_{args.embedding}_{args.seed}_{args.num_feature}'
+if args.cnngrams != None and args.model == 'cnn': saved_model_path += '_' + ''.join(args.cnngrams)
 logger_dir = f'{saved_model_path}/logs/run{args.run}/'
 logger_val_dir = f'{saved_model_path}/logs/val-{args.run}/'
 
@@ -98,14 +99,18 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 char_emb_dim = int(args.charembdim)
 char_max_len = int(args.charlen)
 neighbor = int(args.neighbor)
-
+dropout = int(args.dropout)
 char_embed = Char_embedding(char_emb_dim, char_max_len, asc=args.asc, random=True, device=device)
 dataset = Word_embedding(lang=args.lang, embedding=args.embedding)
 emb_dim = dataset.emb_dim
 
 #* Initializing model
 if args.model == 'lstm':
-    model = mimick(char_embed.embed, char_embed.char_emb_dim, dataset.emb_dim, int(args.num_feature))
+    model = mimick(
+        char_embed.embed, 
+        char_embed.char_emb_dim, 
+        dataset.emb_dim, 
+        int(args.num_feature))
 elif args.model == 'cnn2':
     model = mimick_cnn2(
         embedding=char_embed.embed,
@@ -115,13 +120,25 @@ elif args.model == 'cnn2':
         num_feature=int(args.num_feature), 
         random=False, asc=args.asc)
 elif args.model == 'cnn':
-    model = mimick_cnn(
-        embedding=char_embed.embed,
-        char_max_len=char_embed.char_max_len, 
-        char_emb_dim=char_embed.char_emb_dim, 
-        emb_dim=emb_dim,
-        num_feature=int(args.num_feature), 
-        random=False, asc=args.asc)
+    if args.cnngrams != None:
+        features = [int(g) for g in args.cnngrams]
+        model = mimick_cnn(
+            embedding=char_embed.embed,
+            char_max_len=char_embed.char_max_len, 
+            char_emb_dim=char_embed.char_emb_dim, 
+            emb_dim=emb_dim,
+            num_feature=int(args.num_feature),
+            random=False, asc=args.asc, features=features,
+            dropout=dropout)
+    else:
+        model = mimick_cnn(
+            embedding=char_embed.embed,
+            char_max_len=char_embed.char_max_len, 
+            char_emb_dim=char_embed.char_emb_dim, 
+            emb_dim=emb_dim,
+            num_feature=int(args.num_feature),
+            random=False, asc=args.asc,
+            dropout=dropout)
 elif args.model == 'cnn3':
     model = mimick_cnn3(
         embedding=char_embed.embed,
@@ -158,10 +175,6 @@ else:
 idxs = char_embed.char_split(words)
 if args.model == 'lstm':
     idxs_len = torch.LongTensor([len(data) for data in idxs])
-    # idxs_sorted, idxs_argsort = idxs_len.sort(descending=True)
-    # idxs = sort_idxs(idxs, idxs_argsort)      
-    # idxs_len_sorted = sort_idxs(idxs_len, idxs_argsort)
-    # inputs = (idxs, idxs_len_sorted) # (batch x seq_len)
     inputs = (idxs, idxs_len)
 else: 
     idxs = nn.utils.rnn.pad_sequence(idxs, batch_first=True)
