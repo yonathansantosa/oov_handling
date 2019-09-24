@@ -186,7 +186,7 @@ cos_dist, nearest_neighbor = cosine_similarity(output.to(device), dataset.word_e
 for i, word in enumerate(words):
     # if word not in dataset.stoi: print('OOV', end=' ')
     print(f'{word} & {dataset.idxs2sentence(nearest_neighbor[i])}', end='')
-    if i % 2 == 0 and i != 0:
+    if i % 2 == 1:
         print('\\\\')
     else:
         print(' & ', end='')
