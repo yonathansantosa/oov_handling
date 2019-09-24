@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import os
 
 import numpy as np
 
@@ -75,6 +76,7 @@ parser.add_argument('--classif', default=200)
 parser.add_argument('--neighbor', default=5)
 parser.add_argument('--seed', default=128)
 parser.add_argument('--words', nargs='+')
+parser.add_argument('--oov_list', default=False, action='store_true')
 parser.add_argument('--cnngrams', nargs='+')
 
 args = parser.parse_args()
@@ -165,11 +167,15 @@ model.load_state_dict(torch.load(f'{saved_model_path}/{args.model}.pth'))
 
 model.eval()
 
+words = 'MCT McNeally Vercellotti Secretive corssing flatfish compartmentalize pesky lawnmower developiong hurtling expectedly'.split()
+
 # *Evaluating
-if args.words == None:
-    words = 'MCT McNeally Vercellotti Secretive corssing flatfish compartmentalize pesky lawnmower developiong hurtling expectedly'.split()
-else:
-    words = 'MCT McNeally Vercellotti Secretive corssing flatfish compartmentalize pesky lawnmower developiong hurtling expectedly'.split() + args.words
+if args.oov_list:
+    f = open(f'oov_list_{args.embedding}.txt', 'w')
+    words += f.read().split()
+elif args.words != None:
+    words += args.words
+
 
 idxs = char_embed.char_split(words)
 if args.model == 'lstm':
