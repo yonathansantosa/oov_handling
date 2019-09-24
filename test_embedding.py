@@ -184,5 +184,8 @@ output = model.forward(inputs) # (batch x word_emb_dim)
 cos_dist, nearest_neighbor = cosine_similarity(output.to(device), dataset.word_embedding.weight.to(device), neighbor)
 
 for i, word in enumerate(words):
+    if word not in dataset.stoi: print('OOV', end=' ')
     print(f'{word} & {dataset.idxs2sentence(nearest_neighbor[i])}\\\\')
-    # print(f'{cos_dist[i][0].item():.4f} | {word} \t=> {dataset.idxs2sentence(nearest_neighbor[i])}')
+    # print(f'{cos_dist[i][0].item():.4f} | {word} \t=>
+    # {dataset.idxs2sentence(nearest_neighbor[i])}')
+    
