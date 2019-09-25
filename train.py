@@ -133,6 +133,8 @@ parser.add_argument('--classif', default=200)
 parser.add_argument('--neighbor', default=5)
 parser.add_argument('--seed', default=64)
 parser.add_argument('--cnngrams', nargs='+')
+parser.add_argument('--test', default=False, action='store_true')
+
 
 
 args = parser.parse_args()
@@ -266,7 +268,7 @@ else:
 if args.init_weight: model.apply(init_weights)
 model.to(device)
 
-if args.load:
+if args.load or args.test:
     model.load_state_dict(torch.load(f'{saved_model_path}/{args.model}.pth'))
     
 elif not os.path.exists(saved_model_path):
@@ -279,116 +281,117 @@ criterion = nn.MSELoss()
 step = 0
 
 # *Training
-for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(args.epoch)):
-    for it, (X, y) in enumerate(train_loader):
-        model.zero_grad()
-        words = dataset.idxs2words(X)
-        idxs = char_embed.char_split(words, args.model)
-        if args.model == 'lstm':
-            idxs_len = torch.LongTensor([len(data) for data in idxs])
-            # idxs_sorted, idxs_argsort = idxs_len.sort(descending=True)
-            # idxs = sort_idxs(idxs, idxs_argsort)      
-            # idxs_len_sorted = sort_idxs(idxs_len, idxs_argsort)
-            # inputs = (idxs, idxs_len_sorted) # (batch x seq_len)
-            inputs = (idxs, idxs_len)
-        else: 
-            idxs = nn.utils.rnn.pad_sequence(idxs, batch_first=True)
-            idxs = idxs.unsqueeze(1)
-            inputs = Variable(idxs).to(device) # (batch x channel x seq_len)
-        target = Variable(y*multiplier).to(device) # (batch x word_emb_dim)
-        output = model.forward(inputs) # (batch x word_emb_dim)
-        loss = criterion(output, target) if args.loss_fn == 'mse' else (1-criterion(output, target)).mean()
+if not args.test:
+    for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(args.epoch)):
+        for it, (X, y) in enumerate(train_loader):
+            model.zero_grad()
+            words = dataset.idxs2words(X)
+            idxs = char_embed.char_split(words, args.model)
+            if args.model == 'lstm':
+                idxs_len = torch.LongTensor([len(data) for data in idxs])
+                # idxs_sorted, idxs_argsort = idxs_len.sort(descending=True)
+                # idxs = sort_idxs(idxs, idxs_argsort)      
+                # idxs_len_sorted = sort_idxs(idxs_len, idxs_argsort)
+                # inputs = (idxs, idxs_len_sorted) # (batch x seq_len)
+                inputs = (idxs, idxs_len)
+            else: 
+                idxs = nn.utils.rnn.pad_sequence(idxs, batch_first=True)
+                idxs = idxs.unsqueeze(1)
+                inputs = Variable(idxs).to(device) # (batch x channel x seq_len)
+            target = Variable(y*multiplier).to(device) # (batch x word_emb_dim)
+            output = model.forward(inputs) # (batch x word_emb_dim)
+            loss = criterion(output, target) if args.loss_fn == 'mse' else (1-criterion(output, target)).mean()
 
-        # ##################
-        # Tensorboard
-        # ################## 
-        loss_item = loss.item() if not args.loss_reduction else loss.mean().item()
-        info = {
-            f'loss-Train-{args.model}-run{args.run}' : loss_item,
+            # ##################
+            # Tensorboard
+            # ################## 
+            loss_item = loss.item() if not args.loss_reduction else loss.mean().item()
+            info = {
+                f'loss-Train-{args.model}-run{args.run}' : loss_item,
+            }
+
+            step += 1
+            for tag, value in info.items():
+                logger.scalar_summary(tag, value, step)
+            
+            if not args.loss_reduction:
+                loss.backward()
+            else:
+                loss = loss.mean(0)
+                for i in range(len(loss)-1):
+                    loss[i].backward(retain_graph=True)
+
+                loss[len(loss)-1].backward()
+
+            optimizer.step()
+            optimizer.zero_grad()
+
+            if not args.quiet:
+                if it % int(dataset_size/(batch_size*5)) == 0:
+                    tqdm.write(f'loss = {loss.mean():.4f}')
+                    model.eval()
+                    random_input = np.random.randint(len(X))
+                    
+                    words = dataset.idx2word(X[random_input]) # list of words  
+
+                    distance, nearest_neighbor = cosine_similarity(output[random_input].detach().unsqueeze(0), word_embedding, neighbor=neighbor)
+                    
+                    loss_dist = torch.dist(output[random_input], target[random_input]*multiplier)
+                    tqdm.write(f'{step} {loss_dist.item():.4f} | {words} \t=> {dataset.idxs2sentence(nearest_neighbor[0])}')
+                    model.train()
+                    tqdm.write('')
+        
+        model.eval()
+
+        #* Saving trained model
+        if not args.local: copy_tree(logger_dir, cloud_dir+logger_dir)
+        torch.save(model.state_dict(), f'{saved_model_path}/{args.model}.pth')
+
+        mse_loss = 0.
+        for it, (X, target) in enumerate(validation_loader):
+            words = dataset.idxs2words(X)
+            idxs = char_embed.char_split(words, args.model)
+            if args.model == 'lstm':
+                idxs_len = torch.LongTensor([len(data) for data in idxs])
+                # idxs_sorted, idxs_argsort = idxs_len.sort(descending=True)
+                # idxs = sort_idxs(idxs, idxs_argsort)      
+                # idxs_len_sorted = sort_idxs(idxs_len, idxs_argsort)
+                # inputs = (idxs, idxs_len_sorted) # (batch x seq_len)
+                inputs = (idxs, idxs_len)
+            else: 
+                idxs = nn.utils.rnn.pad_sequence(idxs, batch_first=True)
+                idxs = idxs.unsqueeze(1)
+                inputs = Variable(idxs).to(device) # (batch x channel x seq_len)
+            target = target.to(device) # (batch x word_emb_dim)
+            output = model.forward(inputs) # (batch x word_emb_dim)
+            mse_loss += ((output-target)**2 / ((dataset_size-split)*emb_dim)).sum().item()
+            
+            #* Printing some output
+            if not args.quiet:
+                if it < 1:
+                    distance, nearest_neighbor = cosine_similarity(output, word_embedding, neighbor=neighbor)
+                    for i, word in enumerate(X):
+                        if i >= 1: break
+                        loss_dist = torch.dist(output[i], target[i])
+                        tqdm.write(f'{loss_dist.item():.4f} | {dataset.idx2word(word)} \t=> {dataset.idxs2sentence(nearest_neighbor[i])}')
+
+        total_val_loss = mse_loss
+
+        if not args.quiet: print(f'total loss = {total_val_loss:.8f}')
+        info_val = {
+            f'loss-Train-{args.model}-run{args.run}' : total_val_loss
         }
 
-        step += 1
-        for tag, value in info.items():
-            logger.scalar_summary(tag, value, step)
-        
-        if not args.loss_reduction:
-            loss.backward()
-        else:
-            loss = loss.mean(0)
-            for i in range(len(loss)-1):
-                loss[i].backward(retain_graph=True)
+        #* Logging graph
+        for tag, value in info_val.items():
+            logger_val.scalar_summary(tag, value, step)
+        model.train()
 
-            loss[len(loss)-1].backward()
-
-        optimizer.step()
-        optimizer.zero_grad()
-
-        if not args.quiet:
-            if it % int(dataset_size/(batch_size*5)) == 0:
-                tqdm.write(f'loss = {loss.mean():.4f}')
-                model.eval()
-                random_input = np.random.randint(len(X))
-                
-                words = dataset.idx2word(X[random_input]) # list of words  
-
-                distance, nearest_neighbor = cosine_similarity(output[random_input].detach().unsqueeze(0), word_embedding, neighbor=neighbor)
-                
-                loss_dist = torch.dist(output[random_input], target[random_input]*multiplier)
-                tqdm.write(f'{step} {loss_dist.item():.4f} | {words} \t=> {dataset.idxs2sentence(nearest_neighbor[0])}')
-                model.train()
-                tqdm.write('')
-    
-    model.eval()
-
-    #* Saving trained model
-    if not args.local: copy_tree(logger_dir, cloud_dir+logger_dir)
-    torch.save(model.state_dict(), f'{saved_model_path}/{args.model}.pth')
-
-    mse_loss = 0.
-    for it, (X, target) in enumerate(validation_loader):
-        words = dataset.idxs2words(X)
-        idxs = char_embed.char_split(words, args.model)
-        if args.model == 'lstm':
-            idxs_len = torch.LongTensor([len(data) for data in idxs])
-            # idxs_sorted, idxs_argsort = idxs_len.sort(descending=True)
-            # idxs = sort_idxs(idxs, idxs_argsort)      
-            # idxs_len_sorted = sort_idxs(idxs_len, idxs_argsort)
-            # inputs = (idxs, idxs_len_sorted) # (batch x seq_len)
-            inputs = (idxs, idxs_len)
-        else: 
-            idxs = nn.utils.rnn.pad_sequence(idxs, batch_first=True)
-            idxs = idxs.unsqueeze(1)
-            inputs = Variable(idxs).to(device) # (batch x channel x seq_len)
-        target = target.to(device) # (batch x word_emb_dim)
-        output = model.forward(inputs) # (batch x word_emb_dim)
-        mse_loss += ((output-target)**2 / ((dataset_size-split)*emb_dim)).sum().item()
-        
-        #* Printing some output
-        if not args.quiet:
-            if it < 1:
-                distance, nearest_neighbor = cosine_similarity(output, word_embedding, neighbor=neighbor)
-                for i, word in enumerate(X):
-                    if i >= 1: break
-                    loss_dist = torch.dist(output[i], target[i])
-                    tqdm.write(f'{loss_dist.item():.4f} | {dataset.idx2word(word)} \t=> {dataset.idxs2sentence(nearest_neighbor[i])}')
-
-    total_val_loss = mse_loss
-
-    if not args.quiet: print(f'total loss = {total_val_loss:.8f}')
-    info_val = {
-        f'loss-Train-{args.model}-run{args.run}' : total_val_loss
-    }
-
-    #* Logging graph
-    for tag, value in info_val.items():
-        logger_val.scalar_summary(tag, value, step)
-    model.train()
-
-    if not args.local:
-        copy_tree(logger_val_dir, cloud_dir+logger_val_dir)
+        if not args.local:
+            copy_tree(logger_val_dir, cloud_dir+logger_val_dir)
 
 #* Saving trained embedding as txt
-f = open(f'{saved_model_path}/trained_embedding_{args.model}.txt', 'w')
+    f = open(f'{saved_model_path}/trained_embedding_{args.model}.txt', 'w')
 
 for it, (X, y) in enumerate(train_loader):
     model.zero_grad()
