@@ -410,11 +410,12 @@ for it, (X, y) in enumerate(train_loader):
         inputs = Variable(idxs).to(device) # (batch x channel x seq_len)
 
     output = model.forward(inputs) # (batch x word_emb_dim)
-    for w, e in zip(words,output):
-        try:
-            f.write(f'{w} {" ".join(map(str,[weight for weight in e.data.cpu().tolist()]))}\n')
-        except UnicodeEncodeError:
-            pass
+    if not args.test:
+        for w, e in zip(words,output):
+            try:
+                f.write(f'{w} {" ".join(map(str,[weight for weight in e.data.cpu().tolist()]))}\n')
+            except UnicodeEncodeError:
+                pass
 
 mse_loss = 0.
 for it, (X, target) in enumerate(validation_loader):
@@ -436,11 +437,12 @@ for it, (X, target) in enumerate(validation_loader):
     model.zero_grad()
 
     output = model.forward(inputs) # (batch x word_emb_dim)
-    for w, e in zip(words,output):
-        try:
-            f.write(f'{w} {" ".join(map(str,[weight for weight in e.data.cpu().tolist()]))}\n')
-        except UnicodeEncodeError:
-            pass
+    if not args.test:
+        for w, e in zip(words,output):
+            try:
+                f.write(f'{w} {" ".join(map(str,[weight for weight in e.data.cpu().tolist()]))}\n')
+            except UnicodeEncodeError:
+                pass
     mse_loss += (((output-target)**2).sum() / ((dataset_size-split))).sum()
     distance, nearest_neighbor = cosine_similarity(output, word_embedding, neighbor=neighbor)
     if it < 3:
