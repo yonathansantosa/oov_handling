@@ -445,9 +445,12 @@ for it, (X, target) in enumerate(validation_loader):
                 pass
     mse_loss += (((output-target)**2).sum() / ((dataset_size-split))).sum()
     distance, nearest_neighbor = cosine_similarity(output, word_embedding, neighbor=neighbor)
-    if it < 3:
+    if it < 3 and not args.test:
         for i, word in enumerate(X):
             loss_dist = torch.dist(output[i], target[i])
-            
+            print(f'{loss_dist.item():.4f} | {dataset.idx2word(word)} \t=> {dataset.idxs2sentence(nearest_neighbor[i])}')
+    else:
+        for i, word in enumerate(X):
+            loss_dist = torch.dist(output[i], target[i])
             print(f'{loss_dist.item():.4f} | {dataset.idx2word(word)} \t=> {dataset.idxs2sentence(nearest_neighbor[i])}')
 print(f'loss = {torch.sqrt(mse_loss).item():.4f}')
