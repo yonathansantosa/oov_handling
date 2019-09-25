@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.autograd import Variable, gradcheck
-from torch.utils.data import SubsetRandomSampler, DataLoader
+from torch.utils.data import SubsetRandomSampler, DataLoader, SequentialSampler
 
 import numpy as np
 import math
@@ -205,7 +205,7 @@ np.random.shuffle(train_indices)
 np.random.shuffle(val_indices)
 
 train_sampler = SubsetRandomSampler(train_indices)
-valid_sampler = SubsetRandomSampler(val_indices)
+valid_sampler = SequentialSampler(val_indices)
 
 train_loader = DataLoader(dataset, batch_size=batch_size, sampler=train_sampler)
 validation_loader = DataLoader(dataset, batch_size=val_batch_size, sampler=valid_sampler)
