@@ -81,7 +81,7 @@ class Postag:
                     tag_id = self.tagset.tag2idx('UNK')
                     
                 tag += [tag_id]
-
+            
             for i in range(length, 5):
                 word += [self.word_embed.word2idx('<pad>')]
                 tag_id = self.tagset.tag2idx('UNK')
@@ -100,79 +100,6 @@ class Postag:
                 tag += [tag_id]
 
         return (torch.LongTensor(word), torch.LongTensor(tag))
-
-class Postag_word:
-    def __init__(self, word_embed, char_embed, corpus='brown', tagset='brown'):
-        if corpus == 'brown':
-            from nltk.corpus import brown as corpus
-        self.char_embed = char_embed
-        self.tagged_words = corpus.tagged_words(tagset=tagset)
-        self.tagged_sents = corpus.tagged_sents(tagset=tagset)
-        self.tagset = Tagset(tagset=tagset)
-        new_itot = {}
-        new_toti = {}
-        self.word_embed = word_embed
-        self.count_bin = torch.zeros(len(self.tagset))
-        self.idxs = torch.zeros(1)
-
-        for _, tag in self.tagged_words:
-            if tag in self.tagset.toti:
-                self.count_bin[self.tagset.tag2idx(tag)] += 1
-            else:
-                self.count_bin[self.tagset.tag2idx('UNK')] += 1
-        
-        _, self.idxs = torch.sort(self.count_bin, descending=True)
-
-        for it, i in enumerate(self.idxs):
-            new_itot[it] = self.tagset.itot[int(i)]
-            new_toti[new_itot[it]] = it
-
-        self.tagset.toti = new_toti
-        self.tagset.itot = new_itot
-
-
-    def __len__(self):
-        return len(self.tagged_sents)
-
-
-    def __getitem__(self, index):
-        word, tag = self.tagged_words[index]
-
-        w_c_idx = self.char_embed.word2idxs(word)
-        if tag in self.tagset.toti:
-            tag_id = self.tagset.tag2idx(tag)
-        else:
-            tag_id = self.tagset.tag2idx('UNK')
-        
-        try:
-            w_idx = self.word_embed.stoi[word]
-        except:
-            pass
-
-        return (torch.LongTensor(w_idx), torch.LongTensor(w_c_idx), torch.LongTensor(tag_id))
-
-class Postagger(nn.Module):
-    def __init__(self, seq_length, emb_dim, hidden_size, output_size):
-        super(Postagger, self).__init__()
-        self.hidden_size = hidden_size
-        self.seq_length = seq_length
-        self.lstm = nn.LSTM(emb_dim, self.hidden_size, 1, bidirectional=True, batch_first=True)
-        self.lstm.flatten_parameters()
-        self.mlp = nn.Sequential(
-            nn.Linear(self.hidden_size, output_size),
-            nn.LogSoftmax(dim=2),
-        )
-
-        
-    def forward(self, inputs):
-        self.lstm.flatten_parameters()
-        out, _ = self.lstm(inputs)
-
-        output = out[:, :, :self.hidden_size] + out[:, :, self.hidden_size:]
-        
-        out = self.mlp(output)
-
-        return out
 
 class Postagger_adaptive(nn.Module):
     def __init__(self, seq_length, emb_dim, hidden_size, output_size):

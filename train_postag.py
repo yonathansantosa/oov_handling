@@ -1,15 +1,13 @@
-#region init
 import nltk
 import numpy as np
 from nltk.corpus import brown
-from tagset.tagset import Postag, Postagger, Postagger_adaptive
-# from tagset.tagset_ud import Postag, Postagger_adaptive
+from tagset.tagset import Postag, Postagger_adaptive
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from torch.autograd import Variable, gradcheck
+from torch.autograd import Variable
 from torch.utils.data import SubsetRandomSampler, DataLoader
 
 from model import *
@@ -62,8 +60,6 @@ parser.add_argument('--oov_random', default=False, action='store_true')
 parser.add_argument('--num_feature', default=100)
 parser.add_argument('--weight_decay', default=0)
 parser.add_argument('--momentum', default=0)
-parser.add_argument('--multiplier', default=1)
-parser.add_argument('--classif', default=200)
 parser.add_argument('--neighbor', default=5)
 parser.add_argument('--seq_len', default=5)
 parser.add_argument('--seed', default=64)
@@ -74,9 +70,7 @@ parser.add_argument('--train_embed', default=False, action='store_true')
 parser.add_argument('--cnngrams', nargs='+')
 
 args = parser.parse_args()
-#endregion
 
-#region config
 # *Device configuration
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -89,7 +83,6 @@ logger_val_dir = '%s/logs/val-run%s/' % (saved_postag_path, args.run)
 logger_val_cosine_dir = '%s/logs/val-cosine-run%s/' % (saved_postag_path, args.run)
 
 if not args.local:
-# logger_dir = cloud_dir + logger_dir
     saved_model_path = cloud_dir + saved_model_path
     saved_postag_path = cloud_dir + saved_postag_path
 
@@ -97,7 +90,6 @@ logger = Logger(logger_dir)
 logger_val = Logger(logger_val_dir)
 #endregion
 
-#region parameters
 # *Parameters
 char_emb_dim = int(args.charembdim)
 char_max_len = int(args.charlen)
@@ -120,78 +112,41 @@ momentum = float(args.momentum)
 multiplier = float(args.multiplier)
 classif = int(args.classif)
 dropout = float(args.dropout)
-#endregion
 
-#region model and embedding init
+# model and embedding init
 char_embed = Char_embedding(char_emb_dim, char_max_len, asc=args.asc, random=True, device=device)
-# char_embed.embed.load_state_dict(torch.load('%s/charembed.pth' % saved_model_path))
-# char_embed.embed.eval()
 
 #* Initializing model
 word_embedding = Word_embedding(lang=args.lang, embedding=args.embedding, freeze=args.train_embed, sparse=False)
-# if not args.oov_random: word_embedding.update_weight('%s/trained_embedding_%s.txt' % (saved_model_path, args.model))
 emb_dim = word_embedding.emb_dim
 
-if args.model == 'lstm':
-    model = mimick(char_embed.embed, char_embed.char_emb_dim, emb_dim, int(args.num_feature))
-elif args.model == 'cnn2':
-    model = mimick_cnn2(
-        embedding=char_embed.embed,
-        char_max_len=char_embed.char_max_len, 
-        char_emb_dim=char_embed.char_emb_dim, 
-        emb_dim=emb_dim,
-        num_feature=int(args.num_feature), 
-        random=False, asc=args.asc)
-elif args.model == 'cnn':
-    if args.cnngrams != None:
-        features = [int(g) for g in args.cnngrams]
+if not args.oov_random:
+    if args.model == 'lstm':
+        model = mimick(
+            embedding = char_embed.embed, 
+            char_emb_dim = char_embed.char_emb_dim, 
+            emb_dim = word_embedding.emb_dim, 
+            hidden_size = int(args.num_feature))
+    elif args.model == 'cnn':
+        if args.cnngrams != None:
+            features = [int(g) for g in args.cnngrams]
+        else:
+            features = list(range(2,8))
         model = mimick_cnn(
             embedding=char_embed.embed,
-            char_max_len=char_embed.char_max_len, 
             char_emb_dim=char_embed.char_emb_dim, 
             emb_dim=emb_dim,
             num_feature=int(args.num_feature),
-            random=False, asc=args.asc, features=features,
+            features=features,
             dropout=dropout)
-    else:
-        model = mimick_cnn(
-            embedding=char_embed.embed,
-            char_max_len=char_embed.char_max_len, 
-            char_emb_dim=char_embed.char_emb_dim, 
-            emb_dim=emb_dim,
-            num_feature=int(args.num_feature),
-            random=False, asc=args.asc,
-            dropout=dropout)
-elif args.model == 'cnn3':
-    model = mimick_cnn3(
-        embedding=char_embed.embed,
-        char_max_len=char_embed.char_max_len, 
-        char_emb_dim=char_embed.char_emb_dim, 
-        emb_dim=emb_dim,
-        num_feature=int(args.num_feature),
-        mtp=multiplier, 
-        random=False, asc=args.asc)
-elif args.model == 'cnn4':
-    model = mimick_cnn4(
-        embedding=char_embed.embed,
-        char_max_len=char_embed.char_max_len, 
-        char_emb_dim=char_embed.char_emb_dim, 
-        emb_dim=emb_dim,
-        num_feature=int(args.num_feature),
-        classif=classif,
-        random=False, asc=args.asc)
-else:
-    model = None
 
-model.to(device)
-model.load_state_dict(torch.load('%s/%s.pth' % (saved_model_path, args.model)))
-#endregion
+    model.to(device)
+    model.load_state_dict(torch.load('%s/%s.pth' % (saved_model_path, args.model)))
 
-model.eval()
+    model.eval()
 
 dataset = Postag(word_embedding)
 
-#region creating vocab entries
 #* Creating PT data samplers and loaders:
 original_vocab_len = len(word_embedding)
 if not args.quiet: print('total word = %d' % len(word_embedding))
@@ -210,7 +165,6 @@ for word in tagged_words:
         else:
             idxs = char_embed.word2idxs(word, args.model).unsqueeze(0).to(device).detach()
             if args.model == 'lstm':
-                # idxs_stacked = torch.stack(idxs)
                 idxs_len = torch.LongTensor([len(data) for data in idxs])
                 generated_embeddings = model.forward((idxs, idxs_len)).detach()
             else: 
@@ -238,7 +192,6 @@ else:
         idxs_len = torch.LongTensor([len(data) for data in idxs])
         generated_embeddings = model.forward((idxs, idxs_len)).detach()
     else: 
-        # idxs = nn.utils.rnn.pad_sequence(idxs, batch_first=True)
         idxs = idxs.unsqueeze(1)
         inputs = Variable(idxs).to(device) # (batch x channel x seq_len)
         generated_embeddings = model.forward(inputs).detach()                 
@@ -248,18 +201,10 @@ new_word = torch.stack(new_word).squeeze()
         
 word_embedding.stoi['<pad>'] = len(word_embedding.stoi)
 word_embedding.itos += ['<pad>']
-#endregion
 with torch.no_grad():
     word_embedding.word_embedding.weight.set_(torch.cat((word_embedding.word_embedding.weight.data, new_word)))
-# word_embedding.word_embedding.to(device)
-# if args.oov_random or args.freeze: 
-#     word_embedding.word_embedding.training = False
-#     word_embedding.word_embedding.weight.requires_grad = False
-# else:
-# word_embedding.word_embedding.training = args.train_embed
-# word_embedding.word_embedding.weight.requires_grad = args.train_embed
-
-#region train val split and loader
+    
+# train val split and loader
 dataset_size = len(dataset)
 indices = list(range(dataset_size))
 split = int(np.floor(validation_split * dataset_size))
@@ -276,11 +221,8 @@ train_loader = DataLoader(dataset, batch_size=batch_size,
                                 sampler=train_sampler)
 validation_loader = DataLoader(dataset, batch_size=val_batch_size,
                                 sampler=valid_sampler)
-#endregion
 
 postagger = Postagger_adaptive(seq_len, emb_dim, 20, len(dataset.tagset)).to(device)
-
-# postagger = Postagger(seq_len, emb_dim, 20, len(dataset.tagset)).to(device)
 
 if args.load:
     postagger.load_state_dict(torch.load('%s/postag.pth' % (saved_postag_path)))
@@ -293,14 +235,10 @@ else:
     optimizer = optim.SGD(list(postagger.parameters()) + list(word_embedding.word_embedding.parameters()), lr=learning_rate, momentum=momentum, nesterov=args.nesterov)
 criterion = nn.NLLLoss()
 
-# postagger.apply(init_weights)
 step = 0
-# if args.train_embed: 
-#     word_embedding.word_embedding.weight.requires_grad = True
 
 #* Training
 for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(args.epoch)):
-# for epoch in range(int(args.epoch), max_epoch):
     loss_item = 0.
     postagger.train()
     
@@ -314,18 +252,8 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
         else:
             words = [word_embedding.idxs2words(x) for x in X]
             idxs = char_embed.char_sents_split(words, args.model)
-            # if args.model != 'lstm': idxs = idxs.unsqueeze(1)
-            # idxs = char_embed.char_split(words)
             if args.model == 'lstm':
-                # idxs_stacked = torch.stack(idxs)
                 idxs_len = torch.LongTensor([len(data) for data in idxs])
-                # idxs_sorted, idxs_argsort = idxs_len.sort(descending=True)
-                # idxs = sort_idxs(idxs, idxs_argsort)      
-                # idxs_len_sorted = sort_idxs(idxs_len, idxs_argsort)
-                # inputs = (idxs, idxs_len_sorted) # (batch x seq_len)
-                # generated_embeddings = model.forward(inputs)
-                # _, argargsort = idxs_argsort.sort()
-                # generated_embeddings = torch.stack(sort_idxs(generated_embeddings, argargsort)).view(X.size(0),-1,emb_dim)
                 generated_embeddings = model.forward((idxs, idxs_len)).view(X.size(0),-1,emb_dim)
             else: 
                 idxs = nn.utils.rnn.pad_sequence(idxs, batch_first=True)
@@ -341,14 +269,11 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
         target = Variable(y).to(device)
         output, loss = postagger.forward(embeddings, target)
         
-        # ##################
         # Tensorboard
-        # ################## 
         loss_item = loss.item()
         info = {
             'loss-Train-%s-postag-run%s' % (args.model, args.run) : loss_item,
         }
-
         step += 1
         if args.run != 0:
             for tag, value in info.items():
@@ -360,8 +285,6 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     if not args.local:
         copy_tree(logger_dir, cloud_dir+logger_dir)
         
-    # torch.save(postagger.state_dict(), '%s/postag.pth' % (saved_postag_path))
-    # torch.save(model.state_dict(), '%s/%s.pth' % (saved_postag_path, args.model))
     if not args.quiet: tqdm.write('%d | %.4f ' % (epoch, loss_item))
 
     #* Validation
@@ -378,15 +301,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
             words = [word_embedding.idxs2words(x) for x in X]
             idxs = char_embed.char_sents_split(words, args.model)
             if args.model == 'lstm':
-                # idxs_stacked = torch.stack(idxs)
                 idxs_len = torch.LongTensor([len(data) for data in idxs])
-                # idxs_sorted, idxs_argsort = idxs_len.sort(descending=True)
-                # idxs = sort_idxs(idxs, idxs_argsort)      
-                # idxs_len_sorted = sort_idxs(idxs_len, idxs_argsort)
-                # inputs = (idxs, idxs_len_sorted) # (batch x seq_len)
-                # generated_embeddings = model.forward(inputs)
-                # _, argargsort = idxs_argsort.sort()
-                # generated_embeddings = torch.stack(sort_idxs(generated_embeddings, argargsort)).view(X.size(0),-1,emb_dim)
                 generated_embeddings = model.forward((idxs, idxs_len)).view(X.size(0),-1,emb_dim)
             else: 
                 idxs = nn.utils.rnn.pad_sequence(idxs, batch_first=True)
@@ -398,17 +313,13 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
             embeddings = mask * pretrained_embeddings + (1-mask) * generated_embeddings
             
         target = Variable(y).to(device)
-        # output = postagger.forward(w_embedding).permute(0, 2, 1)
         output, validation_loss = postagger.validation(embeddings, target)
-        # output_tag = postagger.predict(output.view(X.shape[0], seq_len))
         output_tag = output.view(X.shape[0], seq_len)
         accuracy += float((output_tag == target).sum())
 
-        # validation_loss += criterion(output, target)*X.shape[0]/(len(val_indices))
         if not args.quiet:
             if it == 0:
                 tag = output_tag[0]
-                # output_tag = postagger.predict(output.view(X.shape[0], seq_len)[0])
                 for i in range(len(X[0])):
                     word_idx = X[0][i].cpu().numpy()
                     word = word_embedding.idx2word(word_idx)
@@ -421,11 +332,10 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     info_val = {
         'loss-Train-%s-postag-run%s' % (args.model, args.run) : validation_loss
     }
-
     if args.run != 0:
         for tag, value in info_val.items():
             logger_val.scalar_summary(tag, validation_loss, step)
-   
+
     if not args.quiet: tqdm.write('val_loss %.4f ' % validation_loss)
     
     postagger.train()
@@ -442,15 +352,7 @@ for it, (X, y) in enumerate(validation_loader):
         words = [word_embedding.idxs2words(x) for x in X]
         idxs = char_embed.char_sents_split(words, args.model)
         if args.model == 'lstm':
-            # idxs_stacked = torch.stack(idxs)
             idxs_len = torch.LongTensor([len(data) for data in idxs])
-            # idxs_sorted, idxs_argsort = idxs_len.sort(descending=True)
-            # idxs = sort_idxs(idxs, idxs_argsort)      
-            # idxs_len_sorted = sort_idxs(idxs_len, idxs_argsort)
-            # inputs = (idxs, idxs_len_sorted) # (batch x seq_len)
-            # generated_embeddings = model.forward(inputs)
-            # _, argargsort = idxs_argsort.sort()
-            # generated_embeddings = torch.stack(sort_idxs(generated_embeddings, argargsort)).view(X.size(0),-1,emb_dim)
             generated_embeddings = model.forward((idxs, idxs_len)).view(X.size(0),-1,emb_dim)
         else: 
             idxs = nn.utils.rnn.pad_sequence(idxs, batch_first=True)
@@ -461,9 +363,7 @@ for it, (X, y) in enumerate(validation_loader):
         pretrained_embeddings = word_embedding.word_embedding(Variable(X).to(device))
         embeddings = mask * pretrained_embeddings + (1-mask) * generated_embeddings
     target = Variable(y).to(device)
-    # output = postagger.forward(w_embedding).permute(0, 2, 1)
     output, _ = postagger.validation(embeddings, target)
-    # output_tag = postagger.predict(output.view(X.shape[0], seq_len))
     output_tag = output.view(X.shape[0], seq_len)
     accuracy += float((output_tag == target).sum())
     if it <= 3 and not args.quiet:

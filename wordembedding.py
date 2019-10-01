@@ -73,7 +73,6 @@ class Word_embedding:
         Input:
         idxs = (torch.LongTensor) 1D tensor contains indexes
         '''
-        # idxs = idxs.squeeze()
         sentence = [self.itos[int(idx)] for idx in idxs]
         return sentence
 

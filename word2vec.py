@@ -103,7 +103,6 @@ with gzip.open(FILE_NAME, 'rb') as f, open(STOI, 'w', encoding='utf-8') as stoi,
         if (j + 1) == num_vectors:
             break
         
-        
 f_out.close()
 chunk_s = open(CHUNK_SIZE, 'a')
 chunk_s.write('%d\n' % counter)

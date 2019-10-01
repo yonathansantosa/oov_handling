@@ -10,7 +10,6 @@ from torch.utils.data import DataLoader
 from scipy.stats import spearmanr
 import argparse
 
-
 def cosine_similarity(tensor):
     similarity = []
     t1 = tensor[:, 0, :]
@@ -83,7 +82,7 @@ class Word_similarity:
 
 # *Argument parser
 parser = argparse.ArgumentParser(
-    description='Conditional Text Generation: Train Discriminator'
+    description='Word similarity task for OOV handling'
 )
 
 parser.add_argument('--lang', default='en',
@@ -91,14 +90,11 @@ parser.add_argument('--lang', default='en',
 parser.add_argument('--model', default='lstm',
                     help='choose which mimick model')
 parser.add_argument('--embedding', default='polyglot')
-parser.add_argument('--local', default=False, action='store_true',)
+parser.add_argument('--local', default=False, action='store_true')
 parser.add_argument('--asc', default=False, action='store_true')
 parser.add_argument('--charlen', default=20, help='maximum length')
 parser.add_argument('--charembdim', default=300)
 parser.add_argument('--num_feature', default=50)
-parser.add_argument('--multiplier', default=1)
-parser.add_argument('--classif', default=20)
-parser.add_argument('--dataset', default='men')
 parser.add_argument('--load', default=False, action='store_true')
 parser.add_argument('--save', default=False, action='store_true')
 parser.add_argument('--cnngrams', nargs='+')
@@ -123,7 +119,6 @@ classif = int(args.classif)
 
 # *Hyperparameter
 batch_size = 64
-
 char_embed = Char_embedding(char_emb_dim, char_max_len, asc=args.asc, random=True, device=device)
 word_embedding = Word_embedding(lang=args.lang, embedding=args.embedding)
 word_embedding.word_embedding.to(device)
@@ -133,62 +128,26 @@ emb_dim = word_embedding.emb_dim
 if args.load:
     if args.model == 'lstm':
         model = mimick(
-            char_embed.embed, 
-            char_embed.char_emb_dim, 
-            word_embedding.emb_dim, 
-            int(args.num_feature))
-    elif args.model == 'cnn2':
-        model = mimick_cnn2(
-            embedding=char_embed.embed,
-            char_max_len=char_embed.char_max_len, 
-            char_emb_dim=char_embed.char_emb_dim, 
-            emb_dim=emb_dim,
-            num_feature=int(args.num_feature), 
-            random=False, asc=args.asc)
+            embedding = char_embed.embed, 
+            char_emb_dim = char_embed.char_emb_dim, 
+            emb_dim = dataset.emb_dim, 
+            hidden_size = int(args.num_feature))
     elif args.model == 'cnn':
         if args.cnngrams != None:
             features = [int(g) for g in args.cnngrams]
-            model = mimick_cnn(
-                embedding=char_embed.embed,
-                char_max_len=char_embed.char_max_len, 
-                char_emb_dim=char_embed.char_emb_dim, 
-                emb_dim=emb_dim,
-                num_feature=int(args.num_feature),
-                random=False, asc=args.asc, features=features)
         else:
-            model = mimick_cnn(
-                embedding=char_embed.embed,
-                char_max_len=char_embed.char_max_len, 
-                char_emb_dim=char_embed.char_emb_dim, 
-                emb_dim=emb_dim,
-                num_feature=int(args.num_feature),
-                random=False, asc=args.asc)
-    elif args.model == 'cnn3':
-        model = mimick_cnn3(
+            features = list(range(2,8))
+        model = mimick_cnn(
             embedding=char_embed.embed,
             char_max_len=char_embed.char_max_len, 
             char_emb_dim=char_embed.char_emb_dim, 
             emb_dim=emb_dim,
             num_feature=int(args.num_feature),
-            mtp=multiplier, 
-            random=False, asc=args.asc)
-    elif args.model == 'cnn4':
-        model = mimick_cnn4(
-            embedding=char_embed.embed,
-            char_max_len=char_embed.char_max_len, 
-            char_emb_dim=char_embed.char_emb_dim, 
-            emb_dim=emb_dim,
-            num_feature=int(args.num_feature),
-            classif=classif,
-            random=False, asc=args.asc)
-    else:
-        model = None
-
+            random=False, asc=args.asc, features=features,
+            dropout=dropout)
     model.to(device)
     model.load_state_dict(torch.load(f'{saved_model_path}/{args.model}.pth'))
     model.eval()
-
-
 
 #! later uncomment this
 print('dataset,oov,invocab,rho,p')
@@ -209,7 +168,6 @@ for d_names in dataset_names:
             if args.load:
                 idxs = char_embed.word2idxs(w, args.model).unsqueeze(0).to(device).detach()
                 if args.model == 'lstm':
-                    # idxs_stacked = torch.stack(idxs)
                     idxs_len = torch.LongTensor([len(data) for data in idxs])
                     output = model.forward((idxs, idxs_len)).detach()
                 else: 
@@ -240,7 +198,6 @@ for d_names in dataset_names:
                 f.write(f'{w} {float(cos_sim[i]):.4f}\n')
     if args.save: f.close() 
 
-    # score, idx = torch.sort(torch.cat(similarity), descending=True)
     r, p = spearmanr(torch.cat(similarity).detach().cpu().numpy(), np.array(dataset.scores))
     
     print(f'{d_names},{oov},{invocab},{r:.8f},{p:.8f}')
