@@ -240,7 +240,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     loss_item = 0.
     postagger.train()
     
-    if not args.freeze: model.train()
+    if not (args.freeze or args.oov_random): model.train()
     if args.train_embed: word_embedding.word_embedding.train()
     for it, (X, y) in enumerate(train_loader):
         postagger.zero_grad()
