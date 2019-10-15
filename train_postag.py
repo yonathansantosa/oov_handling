@@ -109,7 +109,6 @@ max_epoch = int(args.maxepoch)
 learning_rate = float(args.lr)
 weight_decay = float(args.weight_decay)
 momentum = float(args.momentum)
-multiplier = float(args.multiplier)
 classif = int(args.classif)
 dropout = float(args.dropout)
 
