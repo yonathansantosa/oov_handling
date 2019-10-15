@@ -287,8 +287,8 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
 
     #* Validation
     postagger.eval()
-    model.eval()
-    word_embedding.word_embedding.eval()
+    if not (args.freeze or args.oov_random): model.eval()
+    if args.train_embed: word_embedding.word_embedding.eval()
     validation_loss = 0.
     accuracy = 0.
     for it, (X, y) in enumerate(validation_loader):
@@ -339,7 +339,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     postagger.train()
 
 postagger.eval()
-model.eval()
+if not (args.freeze or args.oov_random): model.eval()
 
 accuracy = 0.
 for it, (X, y) in enumerate(validation_loader):
