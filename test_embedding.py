@@ -136,7 +136,7 @@ elif args.model == 'cnn':
             char_emb_dim=char_embed.char_emb_dim, 
             emb_dim=emb_dim,
             num_feature=int(args.num_feature),
-            random=False, asc=args.asc,
+            asc=args.asc,
             dropout=dropout)
 elif args.model == 'cnn3':
     model = mimick_cnn3(
