@@ -125,7 +125,6 @@ elif args.model == 'cnn':
         features = [int(g) for g in args.cnngrams]
         model = mimick_cnn(
             embedding=char_embed.embed,
-            char_max_len=char_embed.char_max_len, 
             char_emb_dim=char_embed.char_emb_dim, 
             emb_dim=emb_dim,
             num_feature=int(args.num_feature),
@@ -134,7 +133,6 @@ elif args.model == 'cnn':
     else:
         model = mimick_cnn(
             embedding=char_embed.embed,
-            char_max_len=char_embed.char_max_len, 
             char_emb_dim=char_embed.char_emb_dim, 
             emb_dim=emb_dim,
             num_feature=int(args.num_feature),
@@ -171,7 +169,7 @@ words = 'MCT McNeally Vercellotti Secretive corssing flatfish compartmentalize p
 
 # *Evaluating
 if args.oov_list:
-    f = open(f'oov_list_{args.embedding}.txt', 'w')
+    f = open(f'oov_list_{args.embedding}.txt', 'r')
     words += f.read().split()
 elif args.words != None:
     words += args.words
