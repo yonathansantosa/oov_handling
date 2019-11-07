@@ -112,14 +112,6 @@ if args.model == 'lstm':
         char_embed.char_emb_dim, 
         dataset.emb_dim, 
         int(args.num_feature))
-elif args.model == 'cnn2':
-    model = mimick_cnn2(
-        embedding=char_embed.embed,
-        char_max_len=char_embed.char_max_len, 
-        char_emb_dim=char_embed.char_emb_dim, 
-        emb_dim=emb_dim,
-        num_feature=int(args.num_feature), 
-        random=False, asc=args.asc)
 elif args.model == 'cnn':
     if args.cnngrams != None:
         features = [int(g) for g in args.cnngrams]
@@ -128,7 +120,7 @@ elif args.model == 'cnn':
             char_emb_dim=char_embed.char_emb_dim, 
             emb_dim=emb_dim,
             num_feature=int(args.num_feature),
-            random=False, asc=args.asc, features=features,
+            features=features,
             dropout=dropout)
     else:
         model = mimick_cnn(
@@ -136,26 +128,7 @@ elif args.model == 'cnn':
             char_emb_dim=char_embed.char_emb_dim, 
             emb_dim=emb_dim,
             num_feature=int(args.num_feature),
-            asc=args.asc,
             dropout=dropout)
-elif args.model == 'cnn3':
-    model = mimick_cnn3(
-        embedding=char_embed.embed,
-        char_max_len=char_embed.char_max_len, 
-        char_emb_dim=char_embed.char_emb_dim, 
-        emb_dim=emb_dim,
-        num_feature=int(args.num_feature),
-        mtp=multiplier, 
-        random=False, asc=args.asc)
-elif args.model == 'cnn4':
-    model = mimick_cnn4(
-        embedding=char_embed.embed,
-        char_max_len=char_embed.char_max_len, 
-        char_emb_dim=char_embed.char_emb_dim, 
-        emb_dim=emb_dim,
-        num_feature=int(args.num_feature),
-        classif=classif,
-        random=False, asc=args.asc)
 else:
     model = None
 
