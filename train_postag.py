@@ -338,6 +338,7 @@ for epoch in trange(int(args.epoch), max_epoch, total=max_epoch, initial=int(arg
     
     postagger.train()
 
+if args.save: torch.save(postagger.state_dict(), f'{saved_postag_path}/postagger.pth')
 postagger.eval()
 if not (args.freeze or args.oov_random): model.eval()
 
