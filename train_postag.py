@@ -153,7 +153,7 @@ new_word = []
 oov = 0
 invocab = 0
 tagged_words = set([word for word, _ in dataset.tagged_words])
-for word in tagged_words:
+for word in sorted(set(tagged_words)):
     if word not in word_embedding.stoi:
         word_embedding.stoi[word] = len(word_embedding.stoi)
         word_embedding.itos += [word]
@@ -202,6 +202,7 @@ word_embedding.stoi['<pad>'] = len(word_embedding.stoi)
 word_embedding.itos += ['<pad>']
 with torch.no_grad():
     word_embedding.word_embedding.weight.set_(torch.cat((word_embedding.word_embedding.weight.data, new_word)))
+    word_embedding.word_embedding.num_embeddings = len(word_embedding.stoi)
     
 # train val split and loader
 dataset_size = len(dataset)
@@ -345,8 +346,12 @@ if not args.test:
     if args.save: 
         torch.save(postagger.state_dict(), f'{saved_postag_path}/postagger.pth')
         torch.save(word_embedding.word_embedding.state_dict(), f'{saved_postag_path}/embedding.pth')
-    postagger.eval()
-if not (args.freeze or args.oov_random): model.eval()
+        
+postagger.eval()
+    
+if not (args.freeze or args.oov_random): 
+    model.eval()
+    word_embedding.word_embedding.eval()
 
 accuracy = 0.
 for it, (X, y) in enumerate(validation_loader):
