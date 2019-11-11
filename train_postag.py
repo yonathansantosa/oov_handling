@@ -140,7 +140,10 @@ if not args.oov_random:
             dropout=dropout)
 
     model.to(device)
-    model.load_state_dict(torch.load('%s/%s.pth' % (saved_model_path, args.model)))
+    if args.load and args.test:
+        model.load_state_dict(torch.load('%s/oov_model.pth' % saved_postag_path))        
+    else:
+        model.load_state_dict(torch.load('%s/%s.pth' % (saved_model_path, args.model)))
 
     model.eval()
 
@@ -345,7 +348,8 @@ if not args.test:
 
     if args.save: 
         torch.save(postagger.state_dict(), f'{saved_postag_path}/postagger.pth')
-        torch.save(word_embedding.word_embedding.state_dict(), f'{saved_postag_path}/embedding.pth')
+        torch.save(model.state_dict(), f'{saved_postag_path}/oov_model.pth')
+        if args.train_embed: torch.save(word_embedding.word_embedding.state_dict(), f'{saved_postag_path}/embedding.pth')
         
 postagger.eval()
     
