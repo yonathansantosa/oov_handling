@@ -171,7 +171,7 @@ elif args.model == 'cnn':
         char_emb_dim=char_embed.char_emb_dim, 
         emb_dim=emb_dim,
         num_feature=int(args.num_feature),
-        random=False, asc=args.asc, features=features,
+        features=features,
         dropout=dropout)
 
 if args.init_weight: model.apply(init_weights)
