@@ -145,10 +145,10 @@ if args.oov_list:
     f = open(f'oov_list_{args.embedding}.txt', 'r')
     words += f.read().split()
 elif args.words != None:
-    words += args.words
+    words = args.words
 
 
-idxs = char_embed.char_split(words)
+idxs = char_embed.char_split(words, model_name=args.model)
 if args.model == 'lstm':
     idxs_len = torch.LongTensor([len(data) for data in idxs])
     inputs = (idxs, idxs_len)

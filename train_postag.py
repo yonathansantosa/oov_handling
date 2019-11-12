@@ -353,9 +353,9 @@ if not args.test:
         
 postagger.eval()
     
-if not (args.freeze or args.oov_random): 
-    model.eval()
-    word_embedding.word_embedding.eval()
+# if not (args.freeze or args.oov_random): 
+model.eval()
+word_embedding.word_embedding.eval()
 
 accuracy = 0.
 for it, (X, y) in enumerate(validation_loader):

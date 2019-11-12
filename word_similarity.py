@@ -114,8 +114,6 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # *Parameters
 char_emb_dim = int(args.charembdim)
 char_max_len = int(args.charlen)
-multiplier = int(args.multiplier)
-classif = int(args.classif)
 
 # *Hyperparameter
 batch_size = 64
@@ -130,7 +128,7 @@ if args.load:
         model = mimick(
             embedding = char_embed.embed, 
             char_emb_dim = char_embed.char_emb_dim, 
-            emb_dim = dataset.emb_dim, 
+            emb_dim = emb_dim, 
             hidden_size = int(args.num_feature))
     elif args.model == 'cnn':
         if args.cnngrams != None:
@@ -139,18 +137,16 @@ if args.load:
             features = list(range(2,8))
         model = mimick_cnn(
             embedding=char_embed.embed,
-            char_max_len=char_embed.char_max_len, 
             char_emb_dim=char_embed.char_emb_dim, 
             emb_dim=emb_dim,
             num_feature=int(args.num_feature),
-            random=False, asc=args.asc, features=features,
-            dropout=dropout)
+            features=features)
     model.to(device)
     model.load_state_dict(torch.load(f'{saved_model_path}/{args.model}.pth'))
     model.eval()
 
 #! later uncomment this
-print('dataset,oov,invocab,rho,p')
+print('dataset,oov,invocab,rho')
 dataset_names = ['card', 'mc30', 'men', 'mturk287', 'mturk771', 'rg65', 'rwstanford', 'simlex', 'simverb', 'verb143', 'wordsim', 'yp130']
 for d_names in dataset_names:
     new_word = []
@@ -200,4 +196,4 @@ for d_names in dataset_names:
 
     r, p = spearmanr(torch.cat(similarity).detach().cpu().numpy(), np.array(dataset.scores))
     
-    print(f'{d_names},{oov},{invocab},{r:.8f},{p:.8f}')
+    print(f'{d_names},{oov},{invocab},{1000*r:.2f}')
