@@ -290,25 +290,25 @@ if not args.test:
     f = open(f'{saved_model_path}/trained_embedding_{args.model}.txt', 'w')
 
 # Printing some prediction on train and val set
-for it, (X, y) in enumerate(train_loader):
-    model.zero_grad()
-    words = dataset.idxs2words(X)
-    idxs = char_embed.char_split(words, args.model)
-    if args.model == 'lstm':
-        idxs_len = torch.LongTensor([len(data) for data in idxs])
-        inputs = (idxs, idxs_len)
-    else: 
-        idxs = nn.utils.rnn.pad_sequence(idxs, batch_first=True)
-        idxs = idxs.unsqueeze(1)
-        inputs = Variable(idxs).to(device) # (batch x channel x seq_len)
+# for it, (X, y) in enumerate(train_loader):
+#     model.zero_grad()
+#     words = dataset.idxs2words(X)
+#     idxs = char_embed.char_split(words, args.model)
+#     if args.model == 'lstm':
+#         idxs_len = torch.LongTensor([len(data) for data in idxs])
+#         inputs = (idxs, idxs_len)
+#     else: 
+#         idxs = nn.utils.rnn.pad_sequence(idxs, batch_first=True)
+#         idxs = idxs.unsqueeze(1)
+#         inputs = Variable(idxs).to(device) # (batch x channel x seq_len)
 
-    output = model.forward(inputs) # (batch x word_emb_dim)
-    if not args.test:
-        for w, e in zip(words,output):
-            try:
-                f.write(f'{w} {" ".join(map(str,[weight for weight in e.data.cpu().tolist()]))}\n')
-            except UnicodeEncodeError:
-                pass
+#     output = model.forward(inputs) # (batch x word_emb_dim)
+    # if not args.test:
+    #     for w, e in zip(words,output):
+    #         try:
+    #             f.write(f'{w} {" ".join(map(str,[weight for weight in e.data.cpu().tolist()]))}\n')
+    #         except UnicodeEncodeError:
+    #             pass
 
 mse_loss = 0.
 for it, (X, target) in enumerate(validation_loader):
@@ -326,15 +326,15 @@ for it, (X, target) in enumerate(validation_loader):
     model.zero_grad()
 
     output = model.forward(inputs) # (batch x word_emb_dim)
-    if not args.test:
-        for w, e in zip(words,output):
-            try:
-                f.write(f'{w} {" ".join(map(str,[weight for weight in e.data.cpu().tolist()]))}\n')
-            except UnicodeEncodeError:
-                pass
-    mse_loss += (((output-target)**2).sum() / ((dataset_size-split))).sum()
+    # if not args.test:
+    #     for w, e in zip(words,output):
+    #         try:
+    #             f.write(f'{w} {" ".join(map(str,[weight for weight in e.data.cpu().tolist()]))}\n')
+    #         except UnicodeEncodeError:
+    #             pass
+    mse_loss += ((output-target)**2 / ((dataset_size-split)*emb_dim)).sum()
     distance, nearest_neighbor = cosine_similarity(output, word_embedding, neighbor=neighbor)
-    if it < 3 and not args.test:
+    if it < 1 and not args.test:
         for i, word in enumerate(X):
             loss_dist = torch.dist(output[i], target[i])
             print(f'{loss_dist.item():.4f} | {dataset.idx2word(word)} \t=> {dataset.idxs2sentence(nearest_neighbor[i])}')
@@ -342,4 +342,4 @@ for it, (X, target) in enumerate(validation_loader):
         for i, word in enumerate(X):
             loss_dist = torch.dist(output[i], target[i])
             print(f'{loss_dist.item():.4f} | {dataset.idx2word(word)} \t=> {dataset.idxs2sentence(nearest_neighbor[i])}')
-print(f'loss = {torch.sqrt(mse_loss).item():.4f}')
+print(f'loss = {mse_loss.item():.4f}')
