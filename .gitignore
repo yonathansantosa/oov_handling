@@ -1,4 +1,4 @@
-__pycache__/charembedding.cpython-36.pyc
+__pycache__/
 .vscode/launch.json
 .vscode/settings.json
 __pycache__/logger.cpython-36.pyc
@@ -99,3 +99,5 @@ train_dropout_test/trained_model_en_cnn_word2vec/logs/run1/events.out.tfevents.1
 train_dropout_test/trained_model_en_cnn_word2vec/logs/val-1/events.out.tfevents.1558954649.DESKTOP-9Q9QLUS
 train_dropout_test/trained_model_en_cnn_word2vec/logs/val-1/events.out.tfevents.1558955010.DESKTOP-9Q9QLUS
 train_dropout_test/trained_model_en_cnn_word2vec/logs/val-1/events.out.tfevents.1558955095.DESKTOP-9Q9QLUS
+__pycache__/charembedding.cpython-37.pyc
+train_dropout/
