@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.autograd import Variable, gradcheck
 from torch.utils.data import SubsetRandomSampler, DataLoader, SequentialSampler
+from torch.utils.tensorboard import SummaryWriter
 
 import numpy as np
 import math
@@ -14,7 +15,7 @@ from wordembedding import Word_embedding
 import argparse
 from tqdm import trange, tqdm
 import os
-from logger import Logger
+# from logger import Logger
 import shutil
 from distutils.dir_util import copy_tree
 import pickle
@@ -107,8 +108,10 @@ if args.cnngrams != None and args.model == 'cnn': saved_model_path += '_' + ''.j
 logger_dir = f'{saved_model_path}/logs/run{args.run}/'
 logger_val_dir = f'{saved_model_path}/logs/val-{args.run}/'
 if not args.local: saved_model_path = cloud_dir + saved_model_path
-logger = Logger(logger_dir)
-logger_val = Logger(logger_val_dir)
+# logger = Logger(logger_dir)
+# logger_val = Logger(logger_val_dir)
+logger = SummaryWriter(logger_dir)
+logger_val = SummaryWriter(logger_val_dir)
 
 # Device configuration
 torch.cuda.current_device()
@@ -173,6 +176,10 @@ elif args.model == 'cnn':
         num_feature=int(args.num_feature),
         features=features,
         dropout=dropout)
+elif args.model == 'cnn_ascii':
+    model = mimick_cnn_ascii(embedding=char_embed.embed,
+    char_emb_dim=char_embed.char_emb_dim,
+    emb_dim=dataset.emb_dim)
 
 if args.init_weight: model.apply(init_weights)
 model.to(device)
@@ -213,7 +220,8 @@ if not args.test:
             }
             step += 1
             for tag, value in info.items():
-                logger.scalar_summary(tag, value, step)
+                # logger.scalar_summary(tag, value, step)
+                logger.add_scalar(tag, value, step)
             
             # Backpropagation
             if not args.loss_reduction:
@@ -280,7 +288,8 @@ if not args.test:
 
         # Logging graph
         for tag, value in info_val.items():
-            logger_val.scalar_summary(tag, value, step)
+            # logger_val.scalar_summary(tag, value, step)
+            logger_val.add_scalar(tag, value, step)
         model.train()
 
         if not args.local:
