@@ -63,7 +63,7 @@ parser = argparse.ArgumentParser(
 )
 
 parser.add_argument('--maxepoch', default=30, help='maximum iteration (default=1000)')
-parser.add_argument('--run', default=1, help='starting epoch (default=1)')
+parser.add_argument('--run', default=1, type=int, help='starting epoch (default=1)')
 parser.add_argument('--save', default=False, action='store_true', help='whether to save model or not')
 parser.add_argument('--load', default=False, action='store_true', help='whether to load model or not')
 parser.add_argument('--lang', default='en', help='choose which language for word embedding')
@@ -73,32 +73,29 @@ parser.add_argument('--charlen', default=20, help='maximum length')
 parser.add_argument('--charembdim', default=300)
 parser.add_argument('--embedding', default='polyglot')
 parser.add_argument('--local', default=False, action='store_true')
-parser.add_argument('--dropout', default=0)
-parser.add_argument('--bsize', default=64)
-parser.add_argument('--epoch', default=0)
+parser.add_argument('--dropout', default=0, type=float)
+parser.add_argument('--bsize', default=64, type=int)
+parser.add_argument('--epoch', default=0, type=int)
 parser.add_argument('--asc', default=False, action='store_true')
 parser.add_argument('--quiet', default=False, action='store_true')
 parser.add_argument('--init_weight', default=False, action='store_true')
 parser.add_argument('--shuffle', default=False, action='store_true')
 parser.add_argument('--nesterov', default=False, action='store_true')
 parser.add_argument('--loss_reduction', default=False, action='store_true')
-parser.add_argument('--num_feature', default=50)
-parser.add_argument('--weight_decay', default=0)
-parser.add_argument('--momentum', default=0)
-parser.add_argument('--multiplier', default=1)
-parser.add_argument('--neighbor', default=5)
-parser.add_argument('--seed', default=64)
+parser.add_argument('--num_feature', default=50, type=int)
+parser.add_argument('--weight_decay', default=0, type=float)
+parser.add_argument('--momentum', default=0, type=float)
+parser.add_argument('--multiplier', default=1, type=float)
+parser.add_argument('--neighbor', default=5, type=int)
+parser.add_argument('--seed', default=64, type=int)
 parser.add_argument('--cnngrams', nargs='+')
 parser.add_argument('--test', default=False, action='store_true')
 
 args = parser.parse_args()
 
 #* Create a failsafe in case of wrong numbering
-run = int(args.run)
-if run < 1:
-    args.run = '1'
 
-if run != 1:
+if args.run != 1:
     args.load = True
 
 # Folder naming based on train location
@@ -116,14 +113,11 @@ logger_val = SummaryWriter(logger_val_dir)
 # Device configuration
 torch.cuda.current_device()
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-char_emb_dim = int(args.charembdim)
-char_max_len = int(args.charlen)
-random_seed = int(args.seed)
 shuffle_dataset = args.shuffle
 validation_split = .8
-neighbor = int(args.neighbor)
-np.random.seed(random_seed)
-torch.manual_seed(random_seed)
+neighbor = args.neighbor
+np.random.seed(args.seed)
+torch.manual_seed(args.seed)
 
 # Hyperparameter
 batch_size = int(args.bsize)
@@ -136,7 +130,7 @@ multiplier = float(args.multiplier)
 dropout = float(args.dropout)
 
 # Loading word and char embedding
-char_embed = Char_embedding(char_emb_dim, char_max_len, asc=args.asc, random=True, device=device)
+char_embed = Char_embedding(args.charembdim, args.charlen, asc=args.asc, random=True, device=device)
 dataset = Word_embedding(lang=args.lang, embedding=args.embedding, device=torch.device('cpu'))
 emb_dim = dataset.emb_dim
 
