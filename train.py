@@ -54,8 +54,8 @@ def init_weights(m):
     Initializing weights and biases with 0.01
     '''
     if type(m) == nn.Linear or type(m) == nn.Conv2d:
-        m.weight.data.fill_(0.01)
-        m.bias.data.fill_(0.01)
+        m.weight.data = torch.normal(0, 0.05, m.weight.data.size())
+        m.bias.data = torch.normal(0, 0.05, m.bias.data.size())
 
 # *Argument parser
 parser = argparse.ArgumentParser(
