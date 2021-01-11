@@ -62,21 +62,21 @@ parser = argparse.ArgumentParser(
     description='Conditional Text Generation: Train Discriminator'
 )
 
-parser.add_argument('--maxepoch', default=30, help='maximum iteration (default=1000)')
+parser.add_argument('--maxepoch', default=30, type=int, help='maximum iteration (default=1000)')
 parser.add_argument('--run', default=1, type=int, help='starting epoch (default=1)')
 parser.add_argument('--save', default=False, action='store_true', help='whether to save model or not')
 parser.add_argument('--load', default=False, action='store_true', help='whether to load model or not')
 parser.add_argument('--lang', default='en', help='choose which language for word embedding')
 parser.add_argument('--model', default='lstm', help='choose which mimick model')
 parser.add_argument('--lr', default=0.1, help='learning rate')
-parser.add_argument('--charlen', default=20, help='maximum length')
-parser.add_argument('--charembdim', default=300)
+parser.add_argument('--charlen', default=20, help='maximum length', type=int)
+parser.add_argument('--charembdim', default=300, type=int)
 parser.add_argument('--embedding', default='polyglot')
 parser.add_argument('--local', default=False, action='store_true')
 parser.add_argument('--dropout', default=0, type=float)
 parser.add_argument('--bsize', default=64, type=int)
 parser.add_argument('--epoch', default=0, type=int)
-parser.add_argument('--asc', default=False, action='store_true')
+parser.add_argument('--char_embed_type', default='random')
 parser.add_argument('--quiet', default=False, action='store_true')
 parser.add_argument('--init_weight', default=False, action='store_true')
 parser.add_argument('--shuffle', default=False, action='store_true')
@@ -130,7 +130,7 @@ multiplier = float(args.multiplier)
 dropout = float(args.dropout)
 
 # Loading word and char embedding
-char_embed = Char_embedding(args.charembdim, args.charlen, asc=args.asc, random=True, device=device)
+char_embed = Char_embedding(args.charembdim, args.charlen, embed_type=args.char_embed_type, random=True, device=device)
 dataset = Word_embedding(lang=args.lang, embedding=args.embedding, device=torch.device('cpu'))
 emb_dim = dataset.emb_dim
 

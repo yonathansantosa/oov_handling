@@ -140,37 +140,37 @@ class mimick_cnn_ascii(nn.Module):
         # self.num_feature = num_feature
 
         self.char_size = char_emb_dim
-        kernel_sizes = [10, 7, 5, 2]
+        kernel_sizes = [10, 7, 5, 4]
 
         self.conv1 = nn.Sequential(
-            nn.Conv2d(1, kernel_sizes[0], kernel_size=(self.char_size, 2), padding=(0,1)),
+            nn.Conv2d(1, kernel_sizes[0], kernel_size=(2, self.char_size), padding=(1,0)),
             nn.ReLU()
         )
-        self.pool1 = nn.MaxPool2d((1, 2), ceil_mode=True)
+        self.pool1 = nn.MaxPool2d((2,1), ceil_mode=True)
 
         self.conv2 = nn.Sequential(
-            nn.Conv2d(1, kernel_sizes[1], (kernel_sizes[0], 2), padding=(0,1) ),
+            nn.Conv2d(1, kernel_sizes[1], (2, kernel_sizes[0]), padding=(1,0)),
             nn.ReLU()
         )
 
-        self.pool2 = nn.MaxPool2d((1, 2), ceil_mode=True)
+        self.pool2 = nn.MaxPool2d((2,1), ceil_mode=True)
 
         self.conv3 = nn.Sequential(
-            nn.Conv2d(1, kernel_sizes[2], (kernel_sizes[1], 2), padding=(0,1)),
+            nn.Conv2d(1, kernel_sizes[2], (2, kernel_sizes[1]), padding=(1,0)),
             nn.ReLU()
         )
 
-        self.pool3 = nn.MaxPool2d((1, 2), ceil_mode=True)
+        self.pool3 = nn.MaxPool2d((2,1), ceil_mode=True)
 
         self.conv4 = nn.Sequential(
-            nn.Conv2d(1, kernel_sizes[3], (kernel_sizes[2], 2), padding=(0,1)),
+            nn.Conv2d(1, kernel_sizes[3], (2, kernel_sizes[2]), padding=(1,0)),
             nn.ReLU()
         )
-
+        
         self.FC = nn.Sequential(
-            nn.Linear(3, 300),
+            nn.Linear(2, 150),
             nn.ReLU(),
-            nn.Linear(300, emb_dim)
+            nn.Linear(150, emb_dim)
         )
 
     def forward(self, inputs):
@@ -198,24 +198,24 @@ class mimick_cnn_ascii(nn.Module):
         
         # N x 1 x emb_dim x L
         c1 = self.conv1(x)
-        c1 = torch.reshape(c1, (c1.shape[0], 1, -1, c1.shape[3]))
+        c1 = torch.reshape(c1, (c1.shape[0], 1, c1.shape[2], -1))
         p1 = self.pool1(c1)
 
 
         # N x 1 x 30 x L1: ceil((L-1)/2)
         c2 = self.conv2(p1)
-        c2 = torch.reshape(c2, (c2.shape[0], 1, -1, c2.shape[3]))
+        c2 = torch.reshape(c2, (c2.shape[0], 1, c2.shape[3], -1))
         p2 = self.pool2(c2)
 
 
         # N x 1 x 30 x L1: ceil(((L-1)/2) - 1)/2)
         c3 = self.conv3(p2)
-        c3 = torch.reshape(c3, (c3.shape[0], 1, -1, c3.shape[3]))
+        c3 = torch.reshape(c3, (c3.shape[0], 1, c3.shape[2], -1))
         p3 = self.pool3(c3)
 
         c4 = self.conv4(p3)
-        c4 = torch.reshape(c4, (c4.shape[0], 1, -1, c4.shape[3]))
-        p4 = F.max_pool2d(c4, kernel_size=(c4.shape[2], 1), ceil_mode=True)
+        c4 = torch.reshape(c4, (c4.shape[0], 1, c4.shape[2], -1))
+        p4 = F.max_pool2d(c4, kernel_size=(1, c4.shape[3]), ceil_mode=True)
 
         p4 = torch.reshape(p4, (p4.shape[0], -1))
 
