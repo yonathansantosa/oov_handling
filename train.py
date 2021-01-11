@@ -244,7 +244,6 @@ if not args.test:
                     tqdm.write(f'{step} {loss_dist.item():.4f} | {words} \t=> {dataset.idxs2sentence(nearest_neighbor[0])}')
                     model.train()
                     tqdm.write('')
-        logger.flush()
         
         model.eval()
 
@@ -287,7 +286,6 @@ if not args.test:
         for tag, value in info_val.items():
             # logger_val.scalar_summary(tag, value, step)
             logger_val.add_scalar(tag, value, step)
-        logger_val.flush()
         model.train()
 
         if not args.local:
@@ -295,7 +293,9 @@ if not args.test:
 
 # Saving trained embedding as txt
     f = open(f'{saved_model_path}/trained_embedding_{args.model}.txt', 'w')
-
+    logger.flush()
+    logger_val.flush()
+    
 # Printing some prediction on train and val set
 # for it, (X, y) in enumerate(train_loader):
 #     model.zero_grad()
