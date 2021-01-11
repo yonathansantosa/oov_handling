@@ -288,8 +288,8 @@ if not args.test:
             logger.add_scalar(tag, value, step)
         model.train()
 
-        if not args.local:
-            copy_tree(logger_val_dir, cloud_dir+logger_val_dir)
+        # if not args.local:
+        #     copy_tree(logger_val_dir, cloud_dir+logger_val_dir)
 
     # Saving trained embedding as txt
     f = open(f'{saved_model_path}/trained_embedding_{args.model}.txt', 'w')
