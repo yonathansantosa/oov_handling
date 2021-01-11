@@ -136,7 +136,7 @@ class mimick_cnn_ascii(nn.Module):
         super(mimick_cnn_ascii, self).__init__()
         self.embedding = nn.Embedding(embedding.num_embeddings, embedding.embedding_dim, padding_idx=0)
         self.embedding.weight.data.copy_(embedding.weight.data)
-        self.dropout = nn.Dropout(dropout)
+        self.dropout = nn.Dropout(.5)
         # self.num_feature = num_feature
 
         self.char_size = char_emb_dim
@@ -144,12 +144,14 @@ class mimick_cnn_ascii(nn.Module):
 
         self.conv1 = nn.Sequential(
             nn.Conv2d(1, kernel_sizes[0], kernel_size=(2, self.char_size), padding=(1,0)),
+            self.dropout,
             nn.ReLU()
         )
         self.pool1 = nn.MaxPool2d((2,1), ceil_mode=True)
 
         self.conv2 = nn.Sequential(
             nn.Conv2d(1, kernel_sizes[1], (2, kernel_sizes[0]), padding=(1,0)),
+            self.dropout,
             nn.ReLU()
         )
 
@@ -157,6 +159,7 @@ class mimick_cnn_ascii(nn.Module):
 
         self.conv3 = nn.Sequential(
             nn.Conv2d(1, kernel_sizes[2], (2, kernel_sizes[1]), padding=(1,0)),
+            self.dropout,
             nn.ReLU()
         )
 
@@ -164,6 +167,7 @@ class mimick_cnn_ascii(nn.Module):
 
         self.conv4 = nn.Sequential(
             nn.Conv2d(1, kernel_sizes[3], (2, kernel_sizes[2]), padding=(1,0)),
+            self.dropout,
             nn.ReLU()
         )
         
