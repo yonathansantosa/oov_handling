@@ -173,7 +173,9 @@ elif args.model == 'cnn':
 elif args.model == 'cnn_ascii':
     model = mimick_cnn_ascii(embedding=char_embed.embed,
     char_emb_dim=char_embed.char_emb_dim,
-    emb_dim=dataset.emb_dim)
+    emb_dim=dataset.emb_dim,
+    dropout=dropout,
+    num_feature=int(args.num_feature))
 
 if args.init_weight: model.apply(init_weights)
 model.to(device)

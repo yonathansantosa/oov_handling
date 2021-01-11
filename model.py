@@ -120,7 +120,7 @@ class mimick_cnn(nn.Module):
 
 
 class mimick_cnn_ascii(nn.Module):
-    def __init__(self, embedding, char_emb_dim=300, emb_dim=300, dropout=0.):
+    def __init__(self, embedding, char_emb_dim=300, emb_dim=300, dropout=0., num_feature=0):
         '''
         Character Embedding model with binary representation
         
@@ -136,11 +136,11 @@ class mimick_cnn_ascii(nn.Module):
         super(mimick_cnn_ascii, self).__init__()
         self.embedding = nn.Embedding(embedding.num_embeddings, embedding.embedding_dim, padding_idx=0)
         self.embedding.weight.data.copy_(embedding.weight.data)
-        self.dropout = nn.Dropout(.5)
+        self.dropout = nn.Dropout(dropout)
         # self.num_feature = num_feature
 
         self.char_size = char_emb_dim
-        kernel_sizes = [200, 150, 100, 100]
+        kernel_sizes = [num_feature+200, num_feature+150, num_feature+100, num_feature+100]
 
         self.conv1 = nn.Sequential(
             nn.Conv2d(1, kernel_sizes[0], kernel_size=(2, self.char_size), padding=(1,0)),
@@ -172,9 +172,9 @@ class mimick_cnn_ascii(nn.Module):
         )
         
         self.FC = nn.Sequential(
-            nn.Linear(100, 200),
+            nn.Linear(num_feature+100, num_feature+200),
             nn.ReLU(),
-            nn.Linear(200, emb_dim)
+            nn.Linear(num_feature+200, emb_dim)
         )
 
     def forward(self, inputs):
