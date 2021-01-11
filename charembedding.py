@@ -39,7 +39,7 @@ class Char_embedding:
             ix = np.arange(len(self.char))
             self.char2ix = dict(zip(self.char,ix))
             self.char_size = len(self.char)
-            self.weight_char = torch.transpose(nn.functional.one_hot(torch.arange(len(self.ix2char), dtype=torch.long), num_classes = len(self.ix2char)+1), 1,0)
+            self.weight_char = torch.transpose(nn.functional.one_hot(torch.arange(len(self.char), dtype=torch.long), num_classes = len(self.char)+1), 1,0)
             self.embed = nn.Embedding.from_pretrained(self.weight_char.type(torch.float)[:-1], freeze=True)
             char_emb_dim = self.char_size
         else:
