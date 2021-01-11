@@ -140,7 +140,7 @@ class mimick_cnn_ascii(nn.Module):
         # self.num_feature = num_feature
 
         self.char_size = char_emb_dim
-        kernel_sizes = [10, 7, 5, 4]
+        kernel_sizes = [100, 50, 20, 10]
 
         self.conv1 = nn.Sequential(
             nn.Conv2d(1, kernel_sizes[0], kernel_size=(2, self.char_size), padding=(1,0)),
