@@ -34,14 +34,14 @@ class Char_embedding:
             char_emb_dim = 8
         elif self.embedding_type=='onehot':
             chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890,.!@#$%^&*|()_+-=[]<>?/\\;\'"\t\n '
-            self.ix2char = [c for c in chars]
-            self.ix2char = ['<unk>', '<eow>', '<sow>'] + self.ix2char
-            ix = np.arange(len(self.ix2char))
-            self.char2ix = dict(zip(self.ix2char,ix))
-            self.char_size = len(self.ix2char)
+            self.char = [c for c in chars]
+            self.char = ['<unk>', '<pad>', '<eow>', '<sow>'] + self.char
+            ix = np.arange(len(self.char))
+            self.char2ix = dict(zip(self.char,ix))
+            self.char_size = len(self.char)
             self.weight_char = torch.transpose(nn.functional.one_hot(torch.arange(len(self.ix2char), dtype=torch.long), num_classes = len(self.ix2char)+1), 1,0)
             self.embed = nn.Embedding.from_pretrained(self.weight_char.type(torch.float)[:-1], freeze=True)
-            None
+            char_emb_dim = self.char_size
         else:
             table = np.transpose(np.loadtxt(f'{self.embedding_folder}/glove.840B.300d-char.txt', dtype=str, delimiter=' ', comments='##'))
             self.char = np.transpose(table[0])
