@@ -177,6 +177,11 @@ class mimick_cnn_ascii(nn.Module):
             nn.Linear(num_feature+200, emb_dim)
         )
 
+        self.bn1 = nn.BatchNorm1d(num_feature+100)
+        self.mlp1 = nn.Sequential(nn.Linear(num_feature+100, num_feature+200), nn.Tanh(),)
+        self.bn2 = nn.BatchNorm1d(num_feature+200)
+        self.mlp2 = nn.Sequential(nn.Linear(num_feature+200, emb_dim))
+
     def forward(self, inputs):
         '''
         Forward pass for the model
@@ -223,6 +228,10 @@ class mimick_cnn_ascii(nn.Module):
 
         p4 = torch.reshape(p4, (p4.shape[0], -1))
 
-        out = self.FC(p4)
+        # out = self.FC(p4)
+        norm_p4 = self.bn1(p4)
+        out_cnn = self.mlp1(norm_p4) 
+        norm_out_cnn = self.bn2(out_cnn)
+        out = self.mlp2(norm_out_cnn)
 
         return out
