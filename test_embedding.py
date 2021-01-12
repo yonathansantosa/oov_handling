@@ -100,7 +100,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 char_emb_dim = int(args.charembdim)
 char_max_len = int(args.charlen)
 neighbor = int(args.neighbor)
-dropout = int(args.dropout)
+dropout = float(args.dropout)
 char_embed = Char_embedding(args.charembdim, args.charlen, embed_type=args.char_embed_type, random=True, device=device)
 dataset = Word_embedding(lang=args.lang, embedding=args.embedding)
 emb_dim = dataset.emb_dim
