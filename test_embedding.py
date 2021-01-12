@@ -56,13 +56,13 @@ parser.add_argument('--model', default='lstm', help='choose which mimick model')
 parser.add_argument('--lr', default=0.1, help='learning rate')
 parser.add_argument('--charlen', default=20, help='maximum length')
 parser.add_argument('--charembdim', default=300)
+parser.add_argument('--char_embed_type', default='random')
 parser.add_argument('--embedding', default='polyglot')
 parser.add_argument('--local', default=False, action='store_true')
 parser.add_argument('--loss_fn', default='mse')
 parser.add_argument('--dropout', default=0)
 parser.add_argument('--bsize', default=64)
 parser.add_argument('--epoch', default=0)
-parser.add_argument('--asc', default=False, action='store_true')
 parser.add_argument('--quiet', default=False, action='store_true')
 parser.add_argument('--init_weight', default=False, action='store_true')
 parser.add_argument('--shuffle', default=False, action='store_true')
@@ -101,36 +101,35 @@ char_emb_dim = int(args.charembdim)
 char_max_len = int(args.charlen)
 neighbor = int(args.neighbor)
 dropout = int(args.dropout)
-char_embed = Char_embedding(char_emb_dim, char_max_len, asc=args.asc, random=True, device=device)
+char_embed = Char_embedding(args.charembdim, args.charlen, embed_type=args.char_embed_type, random=True, device=device)
 dataset = Word_embedding(lang=args.lang, embedding=args.embedding)
 emb_dim = dataset.emb_dim
 
-#* Initializing model
+# Initializing model
 if args.model == 'lstm':
     model = mimick(
-        char_embed.embed, 
-        char_embed.char_emb_dim, 
-        dataset.emb_dim, 
-        int(args.num_feature))
+        embedding = char_embed.embed, 
+        char_emb_dim = char_embed.char_emb_dim, 
+        emb_dim = dataset.emb_dim, 
+        hidden_size = int(args.num_feature))
 elif args.model == 'cnn':
     if args.cnngrams != None:
         features = [int(g) for g in args.cnngrams]
-        model = mimick_cnn(
-            embedding=char_embed.embed,
-            char_emb_dim=char_embed.char_emb_dim, 
-            emb_dim=emb_dim,
-            num_feature=int(args.num_feature),
-            features=features,
-            dropout=dropout)
     else:
-        model = mimick_cnn(
-            embedding=char_embed.embed,
-            char_emb_dim=char_embed.char_emb_dim, 
-            emb_dim=emb_dim,
-            num_feature=int(args.num_feature),
-            dropout=dropout)
-else:
-    model = None
+        features = list(range(2,8))
+    model = mimick_cnn(
+        embedding=char_embed.embed,
+        char_emb_dim=char_embed.char_emb_dim, 
+        emb_dim=emb_dim,
+        num_feature=int(args.num_feature),
+        features=features,
+        dropout=dropout)
+elif args.model == 'cnn_ascii':
+    model = mimick_cnn_ascii(embedding=char_embed.embed,
+    char_emb_dim=char_embed.char_emb_dim,
+    emb_dim=dataset.emb_dim,
+    dropout=dropout,
+    num_feature=int(args.num_feature))
 
 model.to(device)
 
