@@ -92,7 +92,7 @@ with gzip.open(FILE_NAME, 'rb') as f, open(STOI, 'w', encoding='utf-8') as stoi,
             f_out.write("%s %s\n" % (word, " ".join(txt_vector)))
             stoi.write('%s %d %d\n' % (word, file_id, counter))
             counter += 1
-        elif re.findall('_', word) == [] and re.findall('http', word) == [] and re.findall('.com', word) == []:
+        elif re.findall('_', word) == [] and re.findall('http', word) == [] and re.findall('.com', word) == [] and re.findall('.co.', word) == [] and re.findall('@', word) == []:
             f_out.write("%s %s\n" % (word, " ".join(txt_vector)))
             stoi.write('%s %d %d\n' % (word, file_id, counter))
             counter += 1
