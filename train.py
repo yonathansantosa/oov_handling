@@ -108,7 +108,7 @@ if not args.local: saved_model_path = cloud_dir + saved_model_path
 # logger = Logger(logger_dir)
 # logger_val = Logger(logger_val_dir)
 logger = SummaryWriter(logger_dir)
-# logger_val = SummaryWriter(logger_val_dir)
+logger_val = SummaryWriter(logger_val_dir)
 
 # Device configuration
 torch.cuda.current_device()
@@ -279,13 +279,13 @@ if not args.test:
 
         if not args.quiet: print(f'total loss = {total_val_loss:.8f}')
         info_val = {
-            f'loss-Train-{args.model}-val{args.run}' : total_val_loss
+            f'loss-Train-{args.model}-run{args.run}' : total_val_loss
         }
 
         # Logging graph
         for tag, value in info_val.items():
             # logger_val.scalar_summary(tag, value, step)
-            logger.add_scalar(tag, value, step)
+            logger_val.add_scalar(tag, value, step)
         model.train()
 
         # if not args.local:
