@@ -9,6 +9,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.autograd import Variable
 from torch.utils.data import SubsetRandomSampler, DataLoader
+from torch.utils.tensorboard import SummaryWriter
 
 from model import *
 from charembedding import Char_embedding
@@ -87,8 +88,10 @@ if not args.local:
     saved_model_path = cloud_dir + saved_model_path
     saved_postag_path = cloud_dir + saved_postag_path
 
-logger = Logger(logger_dir)
-logger_val = Logger(logger_val_dir)
+# logger = Logger(logger_dir)
+# logger_val = Logger(logger_val_dir)
+logger = SummaryWriter(logger_dir)
+logger_val = SummaryWriter(logger_val_dir)
 #endregion
 
 # *Parameters
@@ -113,7 +116,7 @@ momentum = float(args.momentum)
 dropout = float(args.dropout)
 
 # model and embedding init
-char_embed = Char_embedding(char_emb_dim, char_max_len, asc=args.asc, random=True, device=device)
+char_embed = Char_embedding(char_emb_dim, char_max_len, embed_type=args.char_embed_type, random=True, device=device)
 
 #* Initializing model
 word_embedding = Word_embedding(lang=args.lang, embedding=args.embedding, freeze=args.train_embed, sparse=False)
@@ -138,6 +141,12 @@ if not args.oov_random:
             num_feature=int(args.num_feature),
             features=features,
             dropout=dropout)
+    elif args.model == 'cnn_ascii':
+        model = mimick_cnn_ascii(embedding=char_embed.embed,
+        char_emb_dim=char_embed.char_emb_dim,
+        emb_dim=emb_dim,
+        dropout=dropout,
+        num_feature=int(args.num_feature))
 
     model.to(device)
     if args.load and args.test:
@@ -283,7 +292,9 @@ if not args.test:
             step += 1
             if args.run != 0:
                 for tag, value in info.items():
-                    logger.scalar_summary(tag, value, step)
+                    # logger.scalar_summary(tag, value, step)
+                    logger.add_scalar(tag, value, step)
+
             
             loss.backward()
             optimizer.step()
@@ -340,7 +351,8 @@ if not args.test:
         }
         if args.run != 0:
             for tag, value in info_val.items():
-                logger_val.scalar_summary(tag, validation_loss, step)
+                # logger_val.scalar_summary(tag, validation_loss, step)
+                logger_val.add_scalar(tag, value, step)
 
         if not args.quiet: tqdm.write('val_loss %.4f ' % validation_loss)
         
