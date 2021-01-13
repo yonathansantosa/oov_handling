@@ -18,7 +18,7 @@ from wordembedding import Word_embedding
 import argparse
 from tqdm import trange, tqdm
 import os
-from logger import Logger
+# from logger import Logger
 import shutil
 from distutils.dir_util import copy_tree
 
